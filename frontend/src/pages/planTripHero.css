@@ -1,0 +1,342 @@
+/* src/pages/planTripHero.css */
+
+.heroWrap {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    background: #0b0f1a;
+}
+
+/* Full illustration background */
+.heroBg {
+    position: absolute;
+    inset: 0;
+    background-image: url("../assets/hero-bg.png");
+    background-size: cover;
+    background-position: center;
+    filter: saturate(1.05);
+    transform: scale(1.02);
+}
+
+/* Big rounded inner frame (white stroke) */
+.heroFrame {
+    position: relative;
+    width: min(1100px, calc(100% - 64px));
+    height: min(640px, calc(100vh - 120px));
+    margin: 60px auto;
+    border-radius: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.65);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* Top nav inside frame */
+.heroNav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+}
+
+.brandDot {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    background: rgba(255, 80, 120, 0.9);
+    box-shadow: 0 10px 20px rgba(255, 80, 120, 0.35);
+}
+
+.navLinks {
+    display: flex;
+    gap: 26px;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.navLinks a {
+    text-decoration: none;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.navLinks a:hover {
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.navRight {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.langPill {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.langPill .chev {
+    opacity: 0.7;
+}
+
+.iconPill {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.65);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.iconDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+/* Centered hero content */
+.heroMain {
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%, -50%);
+    width: min(820px, calc(100% - 64px));
+    text-align: center;
+}
+
+.heroTitle {
+    margin: 0;
+    font-size: clamp(34px, 4.2vw, 54px);
+    line-height: 1.05;
+    font-weight: 800;
+    color: rgba(0, 0, 0, 0.75);
+    text-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.heroSub {
+    margin: 14px auto 18px;
+    max-width: 720px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(0, 0, 0, 0.35);
+}
+
+/* Search pill */
+.searchPill {
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: min(760px, 100%);
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 999px;
+    padding: 10px 10px 10px 14px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.pillField {
+    flex: 1;
+    text-align: left;
+    padding: 6px 12px;
+}
+
+.pillLabel {
+    font-size: 10px;
+    color: rgba(0, 0, 0, 0.35);
+    margin-bottom: 2px;
+}
+
+.pillField input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.75);
+    text-align: center;
+    /* 👈 THIS is what you want */
+}
+
+.pillField input::placeholder {
+    text-align: center;
+}
+
+
+.pillDivider {
+    width: 1px;
+    height: 30px;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.pillButton {
+    border: none;
+    cursor: pointer;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: #ff4b67;
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+    box-shadow: 0 18px 40px rgba(255, 75, 103, 0.32);
+}
+
+.pillButton:hover {
+    filter: brightness(0.98);
+}
+
+/* Where-to style tweaks */
+.heroTitleWhere {
+    font-size: clamp(40px, 5vw, 64px);
+    letter-spacing: -0.02em;
+}
+
+.searchPillWhere {
+    width: min(820px, 100%);
+}
+
+/* Dates pill layout */
+.searchPillDates {
+    width: min(860px, 100%);
+    padding: 10px 10px 10px 14px;
+}
+
+/* Modern date picker inside pill */
+.datePillWrap {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.dateField {
+    position: relative;
+}
+
+.dateButton {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    text-align: left;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.75);
+    padding: 0;
+    cursor: pointer;
+}
+
+.datePopover {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 18px;
+    padding: 12px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* DayPicker polish (modern look) */
+.rdp {
+    --rdp-accent-color: #ff4b67;
+    --rdp-background-color: rgba(255, 75, 103, 0.12);
+    margin: 0;
+}
+
+.rdp-caption_label {
+    font-weight: 700;
+}
+
+.rdp-day_selected,
+.rdp-day_selected:focus-visible,
+.rdp-day_selected:hover {
+    background: #ff4b67 !important;
+}
+
+/* Days field inside white bar */
+.daysField {
+    width: 110px;
+    flex: 0 0 110px;
+}
+
+.daysValue {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(0, 0, 0, 0.75);
+}
+
+/* Error message */
+.heroError {
+    margin-top: 10px;
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.pillFieldCenter {
+    text-align: center;
+}
+
+.centerInput {
+    text-align: center;
+}
+
+.centerInput::placeholder {
+    text-align: center;
+}
+
+.titleUp {
+    margin-top: -50px;
+}
+
+.heroWrap {
+    padding-top: 80px;
+}
+
+.popular-section {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    max-width: 720px;
+    width: 100%;
+}
+
+.popular-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.popular-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.city-chip {
+    border: 0;
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgb(243, 242, 242);
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.city-chip:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 253, 253, 0.931);
+}

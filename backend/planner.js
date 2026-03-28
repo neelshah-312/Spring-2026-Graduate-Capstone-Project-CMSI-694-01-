@@ -1,4 +1,5 @@
 const { searchPlaces } = require("./googlePlaces");
+const { getTravelTime } = require("./distance");
 
 const CATEGORIES = {
   food: "best restaurants",
@@ -9,87 +10,111 @@ const CATEGORIES = {
   nightlife: "nightlife",
 };
 
-// ✅ Helpers
+/* ---------- TIME LOGIC ---------- */
+
 function parseStartHour(startTime) {
   if (!startTime) return 9;
-  <input
-    type="time"
-    value={startTime}
-    onChange={(e) => setStartTime(e.target.value)} // gives "09:00"
-    className="..."
-  />
-  //  return Number.isFinite(h) ? h : 9;
+
+  const [h, m] = startTime.split(":").map(Number);
+  if (!h && h !== 0) return 9;
+
+  return m === 0 ? h : Math.min(h + 1, 23);
 }
 
-function preferredInterestsForHour(hour, interests) {
-  // Time-based preference order (only uses interests the user actually picked)
-  const ranges = [
-    { start: 6, end: 10, prefs: ["nature", "landmarks"] },
-    { start: 10, end: 14, prefs: ["food"] },
-    { start: 14, end: 18, prefs: ["museums", "shopping"] },
-    { start: 18, end: 23, prefs: ["nightlife", "food"] },
+function getCategoryByTime(hour, interests) {
+  const rules = [
+    { start: 6, end: 10, type: "food" },        // breakfast
+    { start: 10, end: 14, type: "landmarks" },  // sightseeing
+    { start: 14, end: 17, type: "museums" },
+    { start: 17, end: 20, type: "shopping" },
+    { start: 20, end: 23, type: "nightlife" },
   ];
 
-  const rule = ranges.find((r) => hour >= r.start && hour < r.end);
-  const preferred = rule ? rule.prefs.filter((i) => interests.includes(i)) : [];
+  const rule = rules.find(r => hour >= r.start && hour < r.end);
 
-  // fallback: keep user's interests after preferred ones
-  const rest = interests.filter((i) => !preferred.includes(i));
+  // fallback to user interests
+  if (!rule) return interests[0];
 
-  return [...preferred, ...rest];
+  return interests.includes(rule.type)
+    ? rule.type
+    : interests[0];
 }
 
+/* ---------- DISTANCE LOGIC ---------- */
+
+function getDistance(a, b) {
+  if (!a || !b || !a.lat || !b.lat) return Infinity;
+
+  const dx = a.lat - b.lat;
+  const dy = a.lng - b.lng;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/* ---------- MAIN GENERATOR ---------- */
+
 async function generateItinerary({ city, interests, days, startTime }) {
-  const items = [];
+  const itinerary = [];
   const used = new Set();
 
   const startHour = parseStartHour(startTime);
 
   for (let d = 1; d <= days; d++) {
     let currentHour = startHour;
+    let currentLocation = null;
 
-    // Same behavior as before: number of activities/day = number of selected interests
     for (let slot = 0; slot < interests.length; slot++) {
-      const orderedInterests = preferredInterestsForHour(currentHour, interests);
+      const category = getCategoryByTime(currentHour, interests);
 
-      let pickedPlace = null;
-      let pickedCategory = null;
+      const query = CATEGORIES[category] || category;
 
-      // Try preferred categories first, then fallback to remaining interests
-      for (const interest of orderedInterests) {
-        const query = CATEGORIES[interest] || interest;
+      let places = await searchPlaces({ city, query });
 
-        const results = await searchPlaces({ city, query });
-        await new Promise((r) => setTimeout(r, 250)); // ✅ small throttle
+      // remove duplicates
+      places = places.filter(p => p?.name && !used.has(p.name));
 
-        const place = results.find((p) => p?.name && !used.has(p.name));
-        if (!place) continue;
-
-        pickedPlace = place;
-        pickedCategory = interest;
-        used.add(place.name);
-        break;
-      }
-
-      if (!pickedPlace) {
-        // Couldn't find any unused place for this slot — just skip the slot
+      if (!places.length) {
         currentHour += 2;
         continue;
       }
 
-      items.push({
-        ...pickedPlace,
+      // 🔥 sort by distance (NEARBY optimization)
+      if (currentLocation) {
+        places.sort(
+          (a, b) =>
+            getDistance(currentLocation, a) -
+            getDistance(currentLocation, b)
+        );
+      }
+
+      const selected = places[0];
+      used.add(selected.name);
+
+      let travel = null;
+
+      if (currentLocation && selected.lat) {
+        travel = await getTravelTime(
+          { lat: currentLocation.lat, lng: currentLocation.lng },
+          { lat: selected.lat, lng: selected.lng }
+        );
+      }
+
+      itinerary.push({
+        ...selected,
         day: d,
-        category: pickedCategory,
-        photoUrl: pickedPlace.photoUrl || null,
+        category,
+        photoUrl: selected.photoUrl || null,
         time: `${String(currentHour).padStart(2, "0")}:00`,
+        walkTime: travel?.walking || null,
+        driveTime: travel?.driving || null,
+        travelDistance: travel?.distance || null,
       });
 
-      currentHour += 2; // next activity starts 2 hours later
+      currentLocation = selected;
+      currentHour += 2;
     }
   }
 
-  return items;
+  return itinerary;
 }
 
 module.exports = { generateItinerary };

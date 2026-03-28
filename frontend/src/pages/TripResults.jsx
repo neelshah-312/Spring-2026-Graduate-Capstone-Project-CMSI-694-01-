@@ -1,186 +1,264 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import Navbar from "../components/Navbar";
 import GlassPage from "../components/GlassPage";
 
+const BACKEND_URL =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
-
-function Badge({ children }) {
-    return (
-        <span className="px-2 py-1 rounded-full text-xs border border-[rgb(var(--border))] text-[rgb(var(--muted))]">
-            {children}
-        </span>
-    );
-}
+/* ---------- helpers ---------- */
 
 function googleMapsUrl(p) {
     if (p?.lat != null && p?.lng != null) {
         return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
     }
-    const q = encodeURIComponent([p?.name, p?.address].filter(Boolean).join(" "));
+
+    const q = encodeURIComponent(
+        [p?.name, p?.address].filter(Boolean).join(" ")
+    );
+
     return `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
-function PlaceCard({ p }) {
+const DEFAULT_TIMES = [
+    "09:00 AM",
+    "11:00 AM",
+    "01:00 PM",
+    "03:00 PM",
+    "06:00 PM",
+    "08:00 PM",
+];
+
+/* ---------- components ---------- */
+
+function Badge({ children }) {
     return (
-        <a
-            href={googleMapsUrl(p)}
-            target="_blank"
-            rel="noreferrer"
-            className="block"
-            title="Open in Google Maps"
-        >
-            <div className="rounded-2xl border border-[rgb(var(--border))] bg-white/80 dark:bg-[rgb(var(--card))]/80 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
-                <div className="h-40 bg-black/5 dark:bg-white/5">
-                    {p.photoUrl ? (
-                        <img
-                            src={p.photoUrl}
-                            alt={p.name}
-                            className="h-40 w-full object-cover"
-                            onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                            }}
-                        />
-                    ) : null}
-                </div>
-
-                <div className="p-4">
-                    <div className="text-[rgb(var(--text))] font-semibold text-lg leading-snug">
-                        {p.name}
-                    </div>
-
-                    {p.address ? (
-                        <div className="mt-1 text-sm text-[rgb(var(--muted))] line-clamp-2">
-                            {p.address}
-                        </div>
-                    ) : null}
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                        {p.category ? <Badge>{p.category}</Badge> : null}
-                    </div>
-
-                    <div className="mt-3 text-xs text-[rgb(var(--muted))] underline">
-                        Open in Google Maps
-                    </div>
-                </div>
-            </div>
-        </a>
+        <span className="px-2 py-1 text-xs rounded-full border border-[rgb(var(--border))] text-[rgb(var(--muted))]">
+            {children}
+        </span>
     );
 }
 
-function ResultsSkeleton() {
+function TimelineItem({
+    place,
+    index,
+    onSwapUp,
+    onSwapDown,
+    onRunningLate,
+}) {
+    const time = DEFAULT_TIMES[index] || "";
+
     return (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                    key={i}
-                    className="rounded-2xl border border-[rgb(var(--border))] bg-white/80 dark:bg-[rgb(var(--card))]/80 overflow-hidden"
+        <div className="flex gap-4 items-start">
+            {/* time */}
+            <div className="text-sm w-20 text-[rgb(var(--muted))] pt-2">{time}</div>
+
+            {/* timeline dot */}
+            <div className="flex flex-col items-center">
+                <div className="w-3 h-3 rounded-full bg-[rgb(var(--primary))]" />
+                <div className="flex-1 w-px bg-[rgb(var(--border))]" />
+            </div>
+
+            {/* card */}
+            <div className="flex-1">
+                <a
+                    href={googleMapsUrl(place)}
+                    target="_blank"
+                    rel="noreferrer"
                 >
-                    <div className="h-40 bg-black/5 dark:bg-white/5 animate-pulse" />
-                    <div className="p-4 space-y-3">
-                        <div className="h-4 w-2/3 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                        <div className="h-3 w-5/6 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
-                        <div className="h-3 w-1/2 rounded bg-black/10 dark:bg-white/10 animate-pulse" />
+                    <div className="rounded-xl border border-[rgb(var(--border))] bg-white/80 dark:bg-[rgb(var(--card))]/80 backdrop-blur overflow-hidden hover:shadow-lg transition">
+
+                        {/* image */}
+                        <div className="h-40 bg-black/5 dark:bg-white/5">
+                            {place.photoUrl && (
+                                <img
+                                    src={place.photoUrl}
+                                    alt={place.name}
+                                    className="h-full w-full object-cover"
+                                    onError={(e) =>
+                                        (e.currentTarget.style.display = "none")
+                                    }
+                                />
+                            )}
+                        </div>
+
+                        <div className="p-4">
+                            <div className="font-semibold text-[rgb(var(--text))]">
+                                {place.name}
+                            </div>
+
+                            {place.address && (
+                                <div className="text-sm text-[rgb(var(--muted))] mt-1">
+                                    {place.address}
+                                </div>
+                            )}
+
+                            {place.walkTime && (
+                                <div className="text-xs text-gray-500 mt-2">
+                                    🚶 Walk: {place.walkTime}
+                                </div>
+                            )}
+
+                            {place.driveTime && (
+                                <div className="text-xs text-gray-500">
+                                    🚗 Drive: {place.driveTime}
+                                </div>
+                            )}
+
+                            <div className="flex gap-2 mt-2">
+                                {place.category && <Badge>{place.category}</Badge>}
+                            </div>
+
+                            <div className="text-xs underline mt-2 text-[rgb(var(--muted))]">
+                                Open in Google Maps
+                            </div>
+
+                            {/* controls */}
+                            <div className="flex gap-2 mt-3">
+
+
+                                <button
+                                    onClick={onRunningLate}
+                                    className="text-xs px-2 py-1 border rounded bg-orange-200 hover:bg-orange-300"
+                                >
+                                    ⏰ Running Late
+                                </button>
+                                <a href={`https://www.google.com/search?q=hotels+near+${place.name}`}>
+                                    🏨 Hotels
+                                </a>
+
+                                <a href={`https://www.skyscanner.com/`}>
+                                    ✈ Flights
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            ))}
+                </a>
+            </div>
         </div>
     );
 }
 
+/* ---------- main page ---------- */
+
 export default function TripResults() {
     const location = useLocation();
-    const state = location.state;
-
+    const state = location.state || {};
     const { tripId } = useParams();
     const navigate = useNavigate();
-    const interests = state?.interests || []; ``
-
-
+    const [weather, setWeather] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [itinerary, setItinerary] = useState(state?.itinerary || []);
+    const [itinerary, setItinerary] = useState([]);
     const [error, setError] = useState("");
+    const [summary, setSummary] = useState("");
 
-    // ✅ Trip meta for header (city + dates)
-    const [tripMeta, setTripMeta] = useState({
-        city: state?.city || null,
+    const [tripMeta] = useState({
+        city: state?.destination || state?.city || null,
         startDate: state?.startDate || null,
         endDate: state?.endDate || null,
-        days: state?.days || null,
     });
 
-    useEffect(() => {
-        async function loadTripMetaIfNeeded() {
-            // If we already have meta from navigation state, don't fetch
-            if (tripMeta.city || tripMeta.startDate || tripMeta.endDate) return;
+    /* load itinerary */
 
+    useEffect(() => {
+        const city = tripMeta.city;
+
+        if (!city) return;
+
+        const fetchWeather = async () => {
             try {
-                const res = await fetch(`${BACKEND_URL}/api/trips/${tripId}`);
+                const res = await fetch(
+                    `${BACKEND_URL}/api/weather?city=${city}`
+                );
+
                 const data = await res.json();
-                if (!res.ok) throw new Error(data?.error || "Failed to load trip info.");
 
-                setTripMeta({
-                    city: data.city || null,
-                    startDate: data.startDate || null,
-                    endDate: data.endDate || null,
-                    days: null,
-                });
-            } catch {
-                // non-fatal: header just won't show meta
+                console.log("Weather:", data);
+
+                if (data.error) {
+                    console.error("Weather error:", data.error);
+                    return;
+                }
+
+                setWeather(data);
+            } catch (err) {
+                console.error(err);
             }
-        }
+        };
 
-        loadTripMetaIfNeeded();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tripId]);
+        fetchWeather();
 
-    useEffect(() => {
-        // ✅ If we already have itinerary from navigation state, use it
-        if (state?.itinerary?.length) {
-            setItinerary(state.itinerary);
-            setLoading(false);
-            return;
-        }
-
-        // ✅ Otherwise fetch saved itinerary from DB using your real endpoint:
-        async function loadItinerary() {
+        async function load() {
             try {
                 setLoading(true);
-                setError("");
 
-                const res = await fetch(`${BACKEND_URL}/api/itinerary/${tripId}`);
+                const res = await fetch(
+                    `${BACKEND_URL}/api/itinerary/${tripId}`
+                );
+
                 const data = await res.json();
 
-                if (!res.ok) throw new Error(data?.error || "Failed to load itinerary.");
-                setItinerary(Array.isArray(data) ? data : []);
+                if (!res.ok) throw new Error(data?.error);
+
+                setItinerary(data);
             } catch (e) {
-                setError(e.message || "Something went wrong.");
-                setItinerary([]);
+                setError(e.message || "Failed to load itinerary");
             } finally {
                 setLoading(false);
             }
         }
 
-        loadItinerary();
-    }, [tripId, state]);
+        load();
+    }, [tripId, state, tripMeta.city]);
+    /* group by day */
 
-    // group by day
     const byDay = useMemo(() => {
-        const m = new Map();
+        const map = new Map();
+
         for (const item of itinerary) {
             const d = item.day ?? 1;
-            if (!m.has(d)) m.set(d, []);
-            m.get(d).push(item);
+
+            if (!map.has(d)) map.set(d, []);
+
+            map.get(d).push(item);
         }
-        for (const [d, arr] of m.entries()) {
-            arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-            m.set(d, arr);
-        }
-        return m;
+
+        return map;
     }, [itinerary]);
 
-    const dayKeys = useMemo(() => Array.from(byDay.keys()).sort((a, b) => a - b), [byDay]);
+    const dayKeys = useMemo(
+        () => [...byDay.keys()].sort((a, b) => a - b),
+        [byDay]
+    );
+    useEffect(() => {
+        async function loadSummary() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/trips/summary`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        city: tripMeta.city,
+                        days: dayKeys.length,
+                        interests: state?.interests || [],
+                    }),
+                });
+
+                const data = await res.json();
+                setSummary(data.summary);
+
+            } catch (e) {
+                console.log("Summary error", e);
+            }
+        }
+
+        if (tripMeta.city) {
+            loadSummary();
+        }
+
+    }, [tripMeta, dayKeys]);
+
+
     const [activeDay, setActiveDay] = useState(1);
 
     useEffect(() => {
@@ -189,81 +267,181 @@ export default function TripResults() {
 
     const activePlaces = byDay.get(activeDay) || [];
 
-    return (
+    // ✅ ADD THIS HERE
+    // ✅ get selected day date
+    const selectedDate = new Date(tripMeta.startDate);
+    selectedDate.setDate(selectedDate.getDate() + (activeDay - 1));
 
+    // ✅ FIX: use LOCAL date (not ISO)
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+    const day = String(selectedDate.getDate()).padStart(2, "0");
+
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // ✅ filter
+    // ✅ filter weather by selected day
+    let filteredWeather = [];
+
+    if (weather?.list) {
+        filteredWeather = weather.list.filter(item => {
+            const itemDate = item.dt_txt.split(" ")[0];
+            return itemDate === formattedDate;
+        });
+
+        // ✅ fallback if no data
+        if (filteredWeather.length === 0) {
+            filteredWeather = weather.list.slice(0, 4);
+        }
+
+        // ✅ daytime only (9AM–6PM)
+        filteredWeather = filteredWeather.filter(item => {
+            const hour = new Date(item.dt_txt).getHours();
+            return hour >= 9 && hour <= 18;
+        });
+    }
+    /* ---------- actions ---------- */
+
+    // function swapActivity(i, j) {
+    //     if (j < 0 || j >= activePlaces.length) return;
+
+    //     const updated = [...itinerary];
+
+    //     const a = updated.findIndex((x) => x === activePlaces[i]);
+    //     const b = updated.findIndex((x) => x === activePlaces[j]);
+
+    //     [updated[a], updated[b]] = [updated[b], updated[a]];
+
+    //     setItinerary(updated);
+    // }
+
+    function delayActivity(i) {
+        const updated = [...itinerary];
+
+        const item = updated.find((x) => x === activePlaces[i]);
+
+        if (!item) return;
+
+        const hour = parseInt((item.time || "09:00").split(":")[0]);
+
+        const newHour = Math.min(hour + 1, 23);
+
+        item.time = `${String(newHour).padStart(2, "0")}:00`;
+
+        setItinerary(updated);
+    }
+
+    return (
         <GlassPage>
-            <div className="mx-auto max-w-6xl px-4 py-10">
-                <div className="flex items-center justify-between gap-4">
+            <div className="mx-auto max-w-5xl px-4 py-10">
+
+                {/* header */}
+
+                <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-semibold text-[rgb(var(--text))]">
-                            Your Itinerary
+                        <h1 className="text-3xl font-semibold text-[rgb(var(--text))]">
+                            Your Trip
                         </h1>
 
-                        <p className="mt-1 text-[rgb(var(--muted))]">
-                            {tripMeta.city ? <span> {tripMeta.city}</span> : null}
-                            {tripMeta.startDate && tripMeta.endDate ? (
-                                <span> • {tripMeta.startDate} → {tripMeta.endDate}</span>
-                            ) : null}
+                        <p className="text-[rgb(var(--muted))] mt-1">
+                            {tripMeta.city}
+                            {tripMeta.startDate && tripMeta.endDate && (
+                                <> • {tripMeta.startDate} → {tripMeta.endDate}</>
+                            )}
                         </p>
+                        {weather?.weather && (
+                            <div className="bg-white/10 p-4 rounded-xl mb-6">
+                                <h2 className="text-xl font-bold mb-2">
+                                    🌤 Weather for Day {activeDay}
+                                </h2>
+
+                                <div className="flex gap-4 overflow-x-auto">
+
+                                    {weather.weather[activeDay - 1]?.hourly
+                                        ?.filter((item) => {
+                                            const hour = parseInt(item.time) / 100;
+                                            return hour >= 9 && hour <= 18;
+                                        })
+                                        .slice(0, 4)
+                                        .map((item, i) => (
+                                            <div key={i} className="p-3 bg-white/10 rounded-lg text-center">
+
+                                                {/* TIME */}
+                                                <p className="text-sm">
+                                                    {parseInt(item.time) / 100}:00
+                                                </p>
+
+                                                {/* TEMP */}
+                                                <p className="font-bold text-lg">
+                                                    {item.tempC}°C
+                                                </p>
+
+                                                {/* ICON */}
+                                                <img
+                                                    src={item.weatherIconUrl[0].value}
+                                                    alt="weather"
+                                                    className="w-8 h-8 mx-auto"
+                                                />
+
+                                                {/* DESCRIPTION */}
+                                                <p className="text-xs capitalize">
+                                                    {item.weatherDesc[0].value}
+                                                </p>
+
+                                            </div>
+                                        ))}
+
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <button
                         onClick={() => navigate("/plan")}
-                        className="px-4 py-2 rounded-xl border border-[rgb(var(--border))] text-[rgb(var(--text))] hover:bg-black/5 dark:hover:bg-white/5"
+                        className="px-4 py-2 rounded-xl border border-[rgb(var(--border))]"
                     >
-                        Plan Another Trip
+                        Plan New Trip
                     </button>
-
                 </div>
 
-                {/* Day tabs */}
-                <div className="mt-6 flex flex-wrap gap-2">
-                    {dayKeys.length ? (
-                        dayKeys.map((d) => {
-                            const active = d === activeDay;
-                            return (
-                                <button
-                                    key={d}
-                                    onClick={() => setActiveDay(d)}
-                                    className={
-                                        "px-4 py-2 rounded-xl text-sm border transition " +
-                                        (active
-                                            ? "border-transparent text-white bg-gradient-to-r from-[rgb(var(--primary))] to-[rgb(var(--primary2))] shadow"
-                                            : "border-[rgb(var(--border))] text-[rgb(var(--muted))] hover:text-[rgb(var(--text))] hover:bg-black/5 dark:hover:bg-white/5")
-                                    }
-                                >
-                                    Day {d}
-                                </button>
-                            );
-                        })
-                    ) : (
-                        <span className="text-[rgb(var(--muted))]">
-                            {loading ? "Loading days..." : "No days found"}
-                        </span>
-                    )}
+                {/* day selector */}
+
+                <div className="flex gap-2 mt-6">
+                    {dayKeys.map((d) => (
+                        <button
+                            key={d}
+                            onClick={() => setActiveDay(d)}
+                            className={`px-4 py-2 rounded-xl border text-sm
+              ${activeDay === d
+                                    ? "bg-[rgb(var(--primary))] text-white border-transparent"
+                                    : "border-[rgb(var(--border))]"
+                                }`}
+                        >
+                            Day {d}
+                        </button>
+                    ))}
                 </div>
 
-                {/* Content */}
-                {loading ? (
-                    <ResultsSkeleton />
-                ) : itinerary.length === 0 ? (
-                    <div className="mt-10 rounded-2xl border border-[rgb(var(--border))] bg-white/70 dark:bg-[rgb(var(--card))]/70 p-6">
-                        <div className="text-[rgb(var(--text))] font-semibold">
-                            {error ? "Could not load itinerary" : "No itinerary data"}
-                        </div>
-                        <div className="mt-2 text-[rgb(var(--muted))]">
-                            {error ? error : "Go back and generate a trip again."}
-                        </div>
-                    </div>
-                ) : (
-                    <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        {activePlaces.map((p) => (
-                            <PlaceCard key={`${p.id || p.place_id || p.name}-${p.day}`} p={p} />
+                {/* timeline */}
+                <div className="mt-10 space-y-8">
+
+                    {loading && <div>Loading itinerary...</div>}
+
+                    {error && <div className="text-red-500">{error}</div>}
+
+                    {!loading &&
+                        activePlaces.map((place, i) => (
+                            <TimelineItem
+                                key={place.id || i}
+                                place={place}
+                                index={i}
+                                // onSwapUp={() => swapActivity(i, i - 1)}
+                                // onSwapDown={() => swapActivity(i, i + 1)}
+                                onRunningLate={() => delayActivity(i)}
+                            />
                         ))}
-                    </div>
-                )}
+                </div>
             </div>
         </GlassPage>
-
     );
 }

@@ -26,6 +26,7 @@ const DEFAULT_TIMES = [
     "03:00 PM",
     "06:00 PM",
     "08:00 PM",
+    "11:00 PM"
 ];
 
 /* ---------- components ---------- */

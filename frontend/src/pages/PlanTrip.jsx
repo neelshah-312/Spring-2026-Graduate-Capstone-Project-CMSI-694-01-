@@ -1,90 +1,93 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./planTripHero.css";
 
 const POPULAR_DESTINATIONS = [
     "Ahmedabad",
-    "Tokyo",
+    "Dubai",
     "New York",
     "London",
-    "Los Angeles",
     "Barcelona",
-    "Mumbai",
-    "Sydney",
-    "Dubai",
-    "Singapore",
-    "Delhi",
-    "Toronto"
 ];
 
 export default function PlanTrip() {
     const [destination, setDestination] = useState("");
     const navigate = useNavigate();
-    const handleCityClick = (selectedCity) => {
-        const val = selectedCity.trim();
-        setDestination(selectedCity);
-        navigate("/dates", { state: { destination: val } });
-    };
-    // const [date, setDate] = useState("Thu, 11 Aug");
-    // const [people, setPeople] = useState("2 people");
 
     function goNext() {
         const val = destination.trim();
         if (!val) return;
-        navigate("/dates", { state: { destination: val } });
+
+        navigate("/dates", {
+            state: { destination: val }
+        });
+    }
+
+    function handleCityClick(city) {
+        setDestination(city);
+
+        navigate("/dates", {
+            state: { destination: city }
+        });
     }
 
     return (
+        <div
+            className="min-h-screen bg-cover bg-center relative"
+            style={{
+                backgroundImage: "url('/images/mountain.jpg')"
+            }}
+        >
+            {/* overlay */}
+            <div className="absolute inset-0 bg-black/40"></div>
 
-        <div className="heroWrap">
-            <div className="heroBg" />
+            {/* hero content */}
+            <div className="relative z-10 flex flex-col items-center justify-center h-[70vh] text-center px-6">
 
-            <div className="heroFrame">
-                {/* keep your header/nav exactly as you have */}
+                <h1 className="text-5xl font-bold text-white">
+                    Discover your next trip
+                </h1>
 
-                <main className="heroMain">
-                    {/* ✅ Tripadvisor-style title */}
-                    <h1 className="heroTitle heroTitleWhere">Discover best place to
-                        enjoy your next Vacation</h1>
-                    <h1 className="heroTitle heroTitleWhere">.    </h1>
+                <p className="text-white/80 mt-3">
+                    AI powered travel planning
+                </p>
 
-                    {/* ✅ Single search pill (no category tabs) */}
-                    <div className="searchPill searchPillWhere">
-                        <div className="pillField pillFieldCenter">
-                            <div className="pillLabel">Destination</div>
-                            <input
-                                value={destination}
-                                onChange={(e) => setDestination(e.target.value)}
-                                placeholder="Paris, Los Angeles, NewYork."
-                                className="centerInput"
-                                onKeyDown={(e) => e.key === "Enter" && goNext()}
-                            />
-                        </div>
-                        <button className="pillButton" onClick={goNext}>
-                            Go Next!!
+                {/* search bar */}
+                <div className="flex items-center bg-white/90 backdrop-blur-md rounded-full shadow-lg px-6 py-3 w-full max-w-2xl mt-6">
+
+                    <input
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                        placeholder="Where do you want to travel?"
+                        className="flex-1 bg-transparent outline-none text-gray-700"
+                    />
+
+                    <button
+                        onClick={goNext}
+                        className="bg-purple-500 hover:bg-purple-600 text-white rounded-full px-6 py-2"
+                    >
+                        Go
+                    </button>
+
+                </div>
+
+                {/* popular destinations */}
+                <div className="flex flex-wrap justify-center gap-3 mt-6">
+
+                    {POPULAR_DESTINATIONS.map((city) => (
+                        <button
+                            key={city}
+                            onClick={() => handleCityClick(city)}
+                            className="px-4 py-2 bg-white/80 hover:bg-white rounded-full text-sm shadow"
+                        >
+                            {city}
                         </button>
-                    </div>
-                    {/* ✅ Popular Destinations */}
-                    <div className="popular-section">
-                        <div className="popular-title">Popular destinations</div>
+                    ))}
 
-                        <div className="popular-grid">
-                            {POPULAR_DESTINATIONS.map((city) => (
-                                <button
-                                    key={city}
-                                    type="button"
-                                    className="city-chip"
-                                    onClick={() => handleCityClick(city)}
-                                >
-                                    {city}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
+                </div>
 
-                </main>
             </div>
         </div>
-
     );
 }

@@ -15,6 +15,23 @@ app.get("/", (req, res) => {
   res.send("TripWise backend is running");
 });
 
+app.get("/api/weather", async (req, res) => {
+  try {
+    const { city } = req.query;
+
+    if (!city) {
+      return res.status(400).json({ error: "City required" });
+    }
+
+    const response = await fetch(`https://wttr.in/${city}?format=j1`);
+    const data = await response.json();
+
+    res.json(data);
+  } catch (err) {
+    console.error("Weather error:", err);
+    res.status(500).json({ error: "Failed to fetch weather" });
+  }
+});
 // ✅ Generate trip + save to DB
 app.post("/api/trips/generate", async (req, res) => {
   try {
@@ -46,10 +63,10 @@ app.post("/api/trips/generate", async (req, res) => {
     });
 
     const insert = db.prepare(
-      `INSERT INTO itinerary (tripId, day, name, address, lat, lng, category, photoUrl)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO itinerary
+      (tripId, day, name, address, lat, lng, category, photoUrl, time, walkTime, driveTime, travelDistance)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
-
     const tx = db.transaction((rows) => {
       rows.forEach((i) => {
         insert.run(
@@ -60,7 +77,11 @@ app.post("/api/trips/generate", async (req, res) => {
           i.lat ?? null,
           i.lng ?? null,
           i.category || "",
-          i.photoUrl || null
+          i.photoUrl || null,
+          i.time || null,
+          i.walkTime || null,
+          i.driveTime || null,
+          i.travelDistance || null
         );
       });
     });
@@ -97,7 +118,22 @@ app.get("/api/itinerary/:id", (req, res) => {
     return res.status(500).json({ error: e.message || "Server error" });
   }
 });
+// ✅ Trip AI Summary
+app.post("/api/trips/summary", (req, res) => {
+  try {
+    const { city, days, interests } = req.body;
 
+    const safeInterests = Array.isArray(interests) ? interests : [];
+
+    const summary = `Your ${days}-day trip to ${city} focuses on ${safeInterests.join(
+      ", "
+    )}. Expect a mix of food, culture, and local experiences.`;
+
+    res.json({ summary });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to generate summary" });
+  }
+});
 app.listen(PORT, () => {
   console.log(`Backend running on ${PORT}`);
 });

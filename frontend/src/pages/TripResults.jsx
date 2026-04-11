@@ -1,7 +1,6 @@
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, useRef } from "react";
 import GlassPage from "../components/GlassPage";
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Polyline } from "@react-google-maps/api";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
 const GMAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_KEY;
@@ -743,13 +742,6 @@ export default function TripResults() {
                     </button>
                 </div>
             </div>
-
-            <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.8; }
-        }
-      `}</style>
-        </div>
+        </GlassPage>
     );
 }

@@ -185,8 +185,8 @@ export default function Wizard() {
                       key={i.key}
                       onClick={() => toggleInterest(i.key)}
                       className={`text-left rounded-2xl p-4 border transition ${active
-                          ? "border-black bg-black text-white"
-                          : "border-black/10 bg-white hover:bg-black/5"
+                        ? "border-black bg-black text-white"
+                        : "border-black/10 bg-white hover:bg-black/5"
                         }`}
                     >
                       <div className="text-2xl">{i.emoji}</div>

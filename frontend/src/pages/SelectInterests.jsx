@@ -1,175 +1,21 @@
-// import { useNavigate, useLocation } from "react-router-dom";
-// import { useMemo, useState } from "react";
-// import Navbar from "../components/Navbar";
-// import GlassPage from "../components/GlassPage";
-
-// const INTEREST_OPTIONS = [
-//     { key: "food", label: "Food", icon: "🍽️" },
-//     { key: "museums", label: "Museums", icon: "🏛️" },
-//     { key: "nature", label: "Nature", icon: "🌿" },
-//     { key: "nightlife", label: "Nightlife", icon: "🎉" },
-//     { key: "shopping", label: "Shopping", icon: "🛍️" },
-//     { key: "adventure", label: "Adventure", icon: "⛰️" },
-//     { key: "landmarks", label: "Landmarks", icon: "🏙️" },
-// ];
-
-// const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
-
-// export default function SelectInterests({ theme, setTheme }) {
-//     const navigate = useNavigate();
-//     const location = useLocation();
-
-//     // Data coming from TripDates page
-//     const { destination, startDate, endDate, days } = location.state || {};
-
-//     const [selected, setSelected] = useState([]);
-//     const [loading, setLoading] = useState(false);
-//     const [err, setErr] = useState("");
-
-//     const canContinue = useMemo(() => selected.length > 0, [selected]);
-
-//     function toggle(id) {
-//         setSelected((prev) =>
-//             prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-//         );
-//     }
-
-//     async function handleGenerate() {
-//         setErr("");
-
-//         if (!destination || !startDate || !endDate || !days) {
-//             setErr("Missing trip details. Please go back and select dates again.");
-//             return;
-//         }
-//         if (selected.length === 0) {
-//             setErr("Please select at least one interest.");
-//             return;
-//         }
-
-//         try {
-//             setLoading(true);
-
-//             // ✅ Generate trip WITH interests
-//             const res = await fetch(`${BACKEND_URL}/api/trips/generate`, {
-//                 method: "POST",
-//                 headers: { "Content-Type": "application/json" },
-//                 body: JSON.stringify({
-//                     city: destination,
-//                     days,
-//                     startDate,
-//                     endDate,
-//                     interests: selected,
-//                 }),
-//             });
-
-//             const data = await res.json();
-//             if (!res.ok) throw new Error(data?.error || "Failed to generate trip.");
-
-//             const tripId = data.tripId || data.id;
-//             if (!tripId) throw new Error("Backend did not return tripId.");
-
-//             navigate(`/trip/${tripId}`, {
-//                 state: {
-//                     itinerary: data.itinerary || [],
-//                     city: destination,
-//                     startDate,
-//                     endDate,
-//                     days,
-//                     interests: selected,
-//                 },
-//             });
-//         } catch (e) {
-//             setErr(e.message || "Something went wrong.");
-//         } finally {
-//             setLoading(false);
-//         }
-//     }
-
-//     return (
-//         <>
-//             <Navbar theme={theme} setTheme={setTheme} />
-
-//             <GlassPage>
-//                 <div className="max-w-3xl mx-auto px-6 py-12">
-//                     <h1 className="text-3xl font-bold text-[rgb(var(--foreground))] mb-2">
-//                         What excites you most?
-//                     </h1>
-
-//                     <p className="text-[rgb(var(--muted))] mb-8">
-//                         Select your interests to personalize your trip.
-//                     </p>
-
-//                     <div className="grid grid-cols-2 gap-6">
-//                         {INTEREST_OPTIONS.map((item) => {
-//                             const isActive = selected.includes(item.key);
-
-//                             return (
-//                                 <button
-//                                     key={item.key}
-//                                     onClick={() => toggle(item.key)}
-//                                     type="button"
-//                                     className={`rounded-2xl p-6 text-left transition-all duration-300 border
-//                         ${isActive
-//                                             ? "bg-gradient-to-r from-orange-400 to-pink-400 text-white shadow-xl scale-[1.02]"
-//                                             : "bg-white/70 dark:bg-[rgb(var(--card))]/70 border-[rgb(var(--border))]"
-//                                         }`}
-//                                 >
-//                                     <div className="text-2xl mb-3">{item.icon}</div>
-//                                     <div className="font-semibold">{item.label}</div>
-//                                 </button>
-//                             );
-//                         })}
-//                     </div>
-
-//                     {err ? <div className="mt-6 text-sm text-red-500">{err}</div> : null}
-
-//                     <div className="mt-10 flex justify-between">
-//                         <button
-//                             onClick={() => navigate("/dates", { state: { destination } })}
-//                             className="px-6 py-3 rounded-xl border border-[rgb(var(--border))] bg-white/70 dark:bg-[rgb(var(--card))]/70"
-//                         >
-//                             ← Back
-//                         </button>
-
-//                         <button
-//                             onClick={handleGenerate}
-//                             disabled={!canContinue || loading}
-//                             className={`px-6 py-3 rounded-xl text-white font-semibold transition
-//                     ${!canContinue || loading
-//                                     ? "bg-gray-400 cursor-not-allowed"
-//                                     : "bg-[rgb(var(--primary))] hover:opacity-90"
-//                                 }`}
-//                         >
-//                             {loading ? "Generating..." : "Generate Itinerary →"}
-//                         </button>
-//                     </div>
-//                 </div>
-//             </GlassPage>
-//         </>
-//     );
-// }
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMemo, useState } from "react";
-import Navbar from "../components/Navbar";
-import GlassPage from "../components/GlassPage";
 
 const INTEREST_OPTIONS = [
-    { key: "food", label: "Food", icon: "🍽️" },
-    { key: "museums", label: "Museums", icon: "🏛️" },
-    { key: "nature", label: "Nature", icon: "🌿" },
-    { key: "nightlife", label: "Nightlife", icon: "🎉" },
-    { key: "shopping", label: "Shopping", icon: "🛍️" },
-    { key: "adventure", label: "Adventure", icon: "⛰️" },
-    { key: "landmarks", label: "Landmarks", icon: "🏙️" },
+    { key: "food", label: "Food & Dining", icon: "🍽️", desc: "Restaurants, cafés & local cuisine" },
+    { key: "museums", label: "Museums", icon: "🏛️", desc: "Art, history & culture" },
+    { key: "nature", label: "Nature", icon: "🌿", desc: "Parks, hikes & outdoors" },
+    { key: "nightlife", label: "Nightlife", icon: "🎉", desc: "Bars, clubs & entertainment" },
+    { key: "shopping", label: "Shopping", icon: "🛍️", desc: "Markets, malls & boutiques" },
+    { key: "adventure", label: "Adventure", icon: "⛰️", desc: "Thrill-seeking experiences" },
+    { key: "landmarks", label: "Landmarks", icon: "🏙️", desc: "Icons & historic sites" },
 ];
 
-const BACKEND_URL =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
 
-export default function SelectInterests({ theme, setTheme }) {
+export default function SelectInterests() {
     const navigate = useNavigate();
     const location = useLocation();
-
     const { destination, startDate, endDate, days } = location.state || {};
 
     const [selected, setSelected] = useState([]);
@@ -180,9 +26,7 @@ export default function SelectInterests({ theme, setTheme }) {
 
     function toggle(id) {
         setSelected((prev) =>
-            prev.includes(id)
-                ? prev.filter((x) => x !== id)
-                : [...prev, id]
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
         );
     }
 
@@ -193,107 +37,293 @@ export default function SelectInterests({ theme, setTheme }) {
 
             const res = await fetch(`${BACKEND_URL}/api/trips/generate`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    city: destination,
-                    days,
-                    startDate,
-                    endDate,
-                    interests: selected,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ city: destination, days, startDate, endDate, interests: selected }),
             });
 
             const data = await res.json();
-
             if (!res.ok) throw new Error(data?.error);
 
             const tripId = data.tripId || data.id;
 
             navigate(`/trip/${tripId}`, {
-                state: {
-                    itinerary: data.itinerary,
-                    city: destination,
-                    startDate,
-                    endDate,
-                    days,
-                    interests: selected,
-                },
+                state: { itinerary: data.itinerary, city: destination, startDate, endDate, days, interests: selected },
             });
         } catch (e) {
-            setErr(e.message);
+            setErr(e.message || "Something went wrong.");
         } finally {
             setLoading(false);
         }
     }
 
     return (
-        <>
-            <Navbar theme={theme} setTheme={setTheme} />
+        <div style={{
+            minHeight: "100vh",
+            backgroundImage: "url('/images/mountain.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+            position: "relative",
+            fontFamily: "'Outfit', system-ui, sans-serif",
+        }}>
+            <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .interest-card:hover { transform: translateY(-3px) !important; }
+        .generate-btn:hover:not(:disabled) { transform: scale(1.03); }
+        .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      `}</style>
 
-            <GlassPage>
-                <div className="max-w-3xl mx-auto px-6 py-12">
+            {/* Overlay */}
+            <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.55) 100%)",
+            }} />
 
-                    <h1 className="text-3xl font-bold mb-2 text-[rgb(var(--foreground))]">
-                        Choose Your Interests
-                    </h1>
+            {/* Content */}
+            <div style={{
+                position: "relative", zIndex: 10,
+                display: "flex", flexDirection: "column",
+                alignItems: "center",
+                padding: "32px 24px 60px",
+                minHeight: "100vh",
+            }}>
 
-                    <p className="text-[rgb(var(--muted))] mb-8">
-                        We'll personalize your itinerary based on these.
-                    </p>
+                {/* Top nav row */}
+                <div style={{
+                    width: "100%", maxWidth: 860,
+                    display: "flex", alignItems: "center", gap: 10, marginBottom: 32,
+                    animation: "fadeUp 0.4s ease both",
+                }}>
+                    <button
+                        onClick={() => navigate("/dates", { state: { destination } })}
+                        style={{
+                            background: "rgba(255,255,255,0.15)",
+                            backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.25)",
+                            borderRadius: 999,
+                            padding: "7px 16px",
+                            color: "rgba(255,255,255,0.85)",
+                            fontSize: 13, fontWeight: 600,
+                            cursor: "pointer", fontFamily: "inherit",
+                            transition: "all 0.15s ease",
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.25)"}
+                        onMouseOut={e => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
+                    >
+                        ← Back
+                    </button>
+                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Step 3 of 3</span>
 
-                    <div className="grid grid-cols-2 gap-6">
-                        {INTEREST_OPTIONS.map((item) => {
-                            const active = selected.includes(item.key);
-
-                            return (
-                                <button
-                                    key={item.key}
-                                    onClick={() => toggle(item.key)}
-                                    className={`p-6 rounded-2xl border transition
-                  ${active
-                                            ? "bg-[rgb(var(--primary))] text-white scale-[1.03] shadow-lg"
-                                            : "bg-white/70 dark:bg-[rgb(var(--card))]/70 border-[rgb(var(--border))]"
-                                        }`}
-                                >
-                                    <div className="text-3xl mb-2">{item.icon}</div>
-                                    <div className="font-semibold">{item.label}</div>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {err && (
-                        <div className="mt-6 text-red-500 text-sm">{err}</div>
-                    )}
-
-                    <div className="flex justify-between mt-10">
-
-                        <button
-                            onClick={() =>
-                                navigate("/dates", { state: { destination } })
-                            }
-                            className="px-6 py-3 rounded-xl border border-[rgb(var(--border))]"
-                        >
-                            ← Back
-                        </button>
-
-                        <button
-                            onClick={handleGenerate}
-                            disabled={!canContinue || loading}
-                            className={`px-6 py-3 rounded-xl font-semibold text-white
-              ${!canContinue || loading
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-[rgb(var(--primary))]"
-                                }`}
-                        >
-                            {loading ? "Generating..." : "Generate Trip →"}
-                        </button>
-
+                    {/* trip summary pill */}
+                    <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                        <span style={{
+                            background: "rgba(255,255,255,0.15)",
+                            backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.2)",
+                            borderRadius: 999, padding: "5px 14px",
+                            color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600,
+                        }}>
+                            📍 {destination}
+                        </span>
+                        {days && (
+                            <span style={{
+                                background: "rgba(255,255,255,0.15)",
+                                backdropFilter: "blur(10px)",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                                borderRadius: 999, padding: "5px 14px",
+                                color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600,
+                            }}>
+                                🗓 {days} days
+                            </span>
+                        )}
                     </div>
                 </div>
-            </GlassPage>
-        </>
+
+                {/* Heading */}
+                <div style={{ textAlign: "center", marginBottom: 32 }}>
+                    <h1 style={{
+                        animation: "fadeUp 0.4s 0.08s ease both",
+                        fontSize: "clamp(32px, 4.5vw, 56px)",
+                        fontWeight: 900,
+                        color: "white",
+                        margin: "0 0 10px",
+                        letterSpacing: "-0.03em",
+                        textShadow: "0 2px 30px rgba(0,0,0,0.3)",
+                    }}>
+                        What excites you?
+                    </h1>
+                    <p style={{
+                        animation: "fadeUp 0.4s 0.14s ease both",
+                        color: "rgba(255,255,255,0.65)",
+                        fontSize: 16, margin: 0,
+                    }}>
+                        Pick your interests — select as many as you like
+                    </p>
+                </div>
+
+                {/* Interest grid */}
+                <div style={{
+                    animation: "fadeUp 0.4s 0.2s ease both",
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                    gap: 14,
+                    width: "100%",
+                    maxWidth: 860,
+                }}>
+                    {INTEREST_OPTIONS.map((item, i) => {
+                        const isActive = selected.includes(item.key);
+                        return (
+                            <button
+                                key={item.key}
+                                className="interest-card"
+                                onClick={() => toggle(item.key)}
+                                style={{
+                                    background: isActive
+                                        ? "rgba(109,40,217,0.85)"
+                                        : "rgba(255,255,255,0.14)",
+                                    backdropFilter: "blur(16px)",
+                                    WebkitBackdropFilter: "blur(16px)",
+                                    border: isActive
+                                        ? "2px solid rgba(167,139,250,0.8)"
+                                        : "2px solid rgba(255,255,255,0.2)",
+                                    borderRadius: 20,
+                                    padding: "22px 20px",
+                                    textAlign: "left",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    fontFamily: "inherit",
+                                    animationDelay: `${i * 40}ms`,
+                                    boxShadow: isActive
+                                        ? "0 8px 32px rgba(109,40,217,0.35)"
+                                        : "0 4px 16px rgba(0,0,0,0.12)",
+                                }}
+                            >
+                                <div style={{ fontSize: 32, marginBottom: 10, lineHeight: 1 }}>{item.icon}</div>
+                                <div style={{
+                                    fontWeight: 700, fontSize: 16,
+                                    color: isActive ? "white" : "rgba(255,255,255,0.92)",
+                                    marginBottom: 4,
+                                }}>
+                                    {item.label}
+                                </div>
+                                <div style={{
+                                    fontSize: 12,
+                                    color: isActive ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.5)",
+                                    fontWeight: 400,
+                                    lineHeight: 1.4,
+                                }}>
+                                    {item.desc}
+                                </div>
+
+                                {isActive && (
+                                    <div style={{
+                                        position: "absolute",
+                                        top: 14, right: 14,
+                                        width: 20, height: 20,
+                                        borderRadius: "50%",
+                                        background: "rgba(255,255,255,0.25)",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        fontSize: 11,
+                                        color: "white",
+                                        fontWeight: 800,
+                                    }}>✓</div>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Error */}
+                {err && (
+                    <div style={{
+                        marginTop: 16,
+                        background: "rgba(239,68,68,0.15)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(239,68,68,0.35)",
+                        borderRadius: 12,
+                        padding: "10px 18px",
+                        color: "#FCA5A5",
+                        fontSize: 14, fontWeight: 500,
+                    }}>
+                        ⚠️ {err}
+                    </div>
+                )}
+
+                {/* Bottom bar */}
+                <div style={{
+                    marginTop: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 16,
+                    animation: "fadeUp 0.4s 0.3s ease both",
+                }}>
+                    {selected.length > 0 && (
+                        <div style={{
+                            background: "rgba(255,255,255,0.15)",
+                            backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.2)",
+                            borderRadius: 999,
+                            padding: "10px 18px",
+                            color: "rgba(255,255,255,0.85)",
+                            fontSize: 14, fontWeight: 600,
+                        }}>
+                            {selected.length} selected
+                        </div>
+                    )}
+
+                    <button
+                        className="generate-btn"
+                        onClick={handleGenerate}
+                        disabled={!canContinue || loading}
+                        style={{
+                            background: canContinue && !loading
+                                ? "linear-gradient(135deg, #EC4899, #DB2777)"
+                                : "rgba(255,255,255,0.2)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 16,
+                            padding: "15px 36px",
+                            fontSize: 16,
+                            fontWeight: 700,
+                            cursor: canContinue && !loading ? "pointer" : "not-allowed",
+                            transition: "all 0.2s ease",
+                            fontFamily: "inherit",
+                            boxShadow: canContinue && !loading ? "0 6px 24px rgba(236,72,153,0.4)" : "none",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                        }}
+                    >
+                        {loading ? (
+                            <>
+                                <span style={{
+                                    display: "inline-block",
+                                    width: 16, height: 16,
+                                    border: "2.5px solid rgba(255,255,255,0.3)",
+                                    borderTopColor: "white",
+                                    borderRadius: "50%",
+                                    animation: "spin 0.7s linear infinite",
+                                }} />
+                                Generating your trip...
+                            </>
+                        ) : (
+                            <>Generate Itinerary ✨</>
+                        )}
+                    </button>
+                </div>
+
+                <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+          .interest-card { position: relative; }
+        `}</style>
+            </div>
+        </div>
     );
 }

@@ -1,0 +1,897 @@
+/* ============================================
+   TRIPWISE — Midnight Nomad Theme
+   Global dark transparent design system
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
+
+/* ── CSS Variables ── */
+:root {
+    --tw-bg-deep: #080b14;
+    --tw-bg-card: rgba(255, 255, 255, 0.07);
+    --tw-bg-card-hover: rgba(255, 255, 255, 0.12);
+    --tw-bg-pill: rgba(255, 255, 255, 0.10);
+    --tw-bg-pill-active: rgba(255, 255, 255, 0.95);
+
+    --tw-border: rgba(255, 255, 255, 0.10);
+    --tw-border-strong: rgba(255, 255, 255, 0.20);
+
+    --tw-text-primary: #ffffff;
+    --tw-text-secondary: rgba(255, 255, 255, 0.60);
+    --tw-text-muted: rgba(255, 255, 255, 0.35);
+
+    --tw-accent-purple: #7c3aed;
+    --tw-accent-cyan: #06b6d4;
+    --tw-accent-orange: #f97316;
+    --tw-accent-green: #22c55e;
+    --tw-accent-pink: #ec4899;
+
+    --tw-blur: blur(18px);
+    --tw-blur-sm: blur(10px);
+    --tw-radius-sm: 12px;
+    --tw-radius-md: 18px;
+    --tw-radius-lg: 24px;
+    --tw-radius-xl: 32px;
+    --tw-radius-pill: 999px;
+
+    --tw-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.35);
+    --tw-shadow-float: 0 20px 60px rgba(0, 0, 0, 0.50);
+
+    --tw-font-display: 'DM Serif Display', Georgia, serif;
+    --tw-font-body: 'DM Sans', system-ui, sans-serif;
+
+    --tw-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--tw-font-body);
+    background: var(--tw-bg-deep);
+    color: var(--tw-text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ── Global Background (scenic photo + dark overlay) ── */
+.tw-page-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-image: url('https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=2400&q=80');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.35) saturate(1.15);
+}
+
+.tw-page-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(170deg,
+            rgba(8, 11, 20, 0.55) 0%,
+            rgba(8, 11, 20, 0.75) 60%,
+            rgba(8, 11, 20, 0.90) 100%);
+}
+
+/* ── Ambient blobs (add once to root layout) ── */
+.tw-blobs {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.tw-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.18;
+    animation: blobDrift 18s ease-in-out infinite alternate;
+}
+
+.tw-blob-1 {
+    width: 500px;
+    height: 500px;
+    background: var(--tw-accent-purple);
+    top: -120px;
+    left: -100px;
+    animation-delay: 0s;
+}
+
+.tw-blob-2 {
+    width: 420px;
+    height: 420px;
+    background: var(--tw-accent-cyan);
+    top: 30%;
+    right: -80px;
+    animation-delay: -6s;
+}
+
+.tw-blob-3 {
+    width: 380px;
+    height: 380px;
+    background: var(--tw-accent-orange);
+    bottom: -80px;
+    left: 35%;
+    animation-delay: -12s;
+}
+
+@keyframes blobDrift {
+    from {
+        transform: translate(0, 0) scale(1);
+    }
+
+    to {
+        transform: translate(30px, 20px) scale(1.08);
+    }
+}
+
+/* ── Navbar ── */
+.tw-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    background: rgba(8, 11, 20, 0.70);
+    backdrop-filter: var(--tw-blur);
+    -webkit-backdrop-filter: var(--tw-blur);
+    border-bottom: 1px solid var(--tw-border);
+}
+
+.tw-navbar-inner {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.tw-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.tw-logo-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--tw-accent-purple), #a855f7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
+}
+
+.tw-logo-text {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--tw-text-primary);
+    letter-spacing: -0.01em;
+}
+
+.tw-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    list-style: none;
+}
+
+.tw-nav-links a {
+    font-size: 14px;
+    color: var(--tw-text-secondary);
+    text-decoration: none;
+    transition: var(--tw-transition);
+}
+
+.tw-nav-links a:hover {
+    color: var(--tw-text-primary);
+}
+
+.tw-nav-cta {
+    padding: 9px 20px;
+    border-radius: var(--tw-radius-pill);
+    background: linear-gradient(135deg, var(--tw-accent-purple), #a855f7);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: var(--tw-transition);
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.40);
+}
+
+.tw-nav-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(124, 58, 237, 0.55);
+}
+
+/* ── Glass Card ── */
+.tw-card {
+    background: var(--tw-bg-card);
+    backdrop-filter: var(--tw-blur);
+    -webkit-backdrop-filter: var(--tw-blur);
+    border: 1px solid var(--tw-border);
+    border-radius: var(--tw-radius-lg);
+    box-shadow: var(--tw-shadow-card);
+    transition: var(--tw-transition);
+}
+
+.tw-card:hover {
+    background: var(--tw-bg-card-hover);
+    border-color: var(--tw-border-strong);
+}
+
+.tw-card-sm {
+    border-radius: var(--tw-radius-md);
+}
+
+.tw-card-xl {
+    border-radius: var(--tw-radius-xl);
+}
+
+/* ── Pill / Day Tabs ── */
+.tw-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: var(--tw-radius-pill);
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--tw-border);
+    background: var(--tw-bg-pill);
+    color: var(--tw-text-secondary);
+    cursor: pointer;
+    transition: var(--tw-transition);
+    backdrop-filter: var(--tw-blur-sm);
+}
+
+.tw-pill:hover {
+    border-color: var(--tw-border-strong);
+    color: var(--tw-text-primary);
+}
+
+.tw-pill.active {
+    background: var(--tw-bg-pill-active);
+    color: #0d0d1a;
+    border-color: transparent;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.30);
+}
+
+/* ── Buttons ── */
+.tw-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: var(--tw-radius-pill);
+    background: linear-gradient(135deg, var(--tw-accent-purple), #a855f7);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: var(--tw-transition);
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+    font-family: var(--tw-font-body);
+}
+
+.tw-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(124, 58, 237, 0.60);
+}
+
+.tw-btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.tw-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: var(--tw-radius-pill);
+    background: var(--tw-bg-pill);
+    color: var(--tw-text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--tw-border);
+    cursor: pointer;
+    transition: var(--tw-transition);
+    backdrop-filter: var(--tw-blur-sm);
+    font-family: var(--tw-font-body);
+    text-decoration: none;
+}
+
+.tw-btn-ghost:hover {
+    background: var(--tw-bg-card-hover);
+    color: var(--tw-text-primary);
+    border-color: var(--tw-border-strong);
+}
+
+.tw-btn-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--tw-bg-pill);
+    border: 1px solid var(--tw-border);
+    cursor: pointer;
+    transition: var(--tw-transition);
+    font-size: 16px;
+    color: var(--tw-text-secondary);
+}
+
+.tw-btn-icon:hover {
+    background: var(--tw-bg-card-hover);
+    color: var(--tw-text-primary);
+}
+
+/* ── Text ── */
+.tw-title {
+    font-family: var(--tw-font-display);
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.05;
+    color: var(--tw-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.tw-subtitle {
+    font-size: 16px;
+    color: var(--tw-text-secondary);
+    line-height: 1.6;
+}
+
+.tw-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tw-text-muted);
+}
+
+/* ── Badge / Tag ── */
+.tw-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: var(--tw-radius-pill);
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid var(--tw-border);
+    background: var(--tw-bg-pill);
+    color: var(--tw-text-secondary);
+}
+
+.tw-badge-purple {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: rgba(124, 58, 237, 0.35);
+    color: #c4b5fd;
+}
+
+.tw-badge-cyan {
+    background: rgba(6, 182, 212, 0.15);
+    border-color: rgba(6, 182, 212, 0.30);
+    color: #67e8f9;
+}
+
+.tw-badge-orange {
+    background: rgba(249, 115, 22, 0.15);
+    border-color: rgba(249, 115, 22, 0.30);
+    color: #fb923c;
+}
+
+.tw-badge-green {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.30);
+    color: #4ade80;
+}
+
+.tw-badge-pink {
+    background: rgba(236, 72, 153, 0.15);
+    border-color: rgba(236, 72, 153, 0.30);
+    color: #f9a8d4;
+}
+
+/* ── Input / Form ── */
+.tw-input {
+    width: 100%;
+    background: var(--tw-bg-card);
+    backdrop-filter: var(--tw-blur-sm);
+    border: 1px solid var(--tw-border);
+    border-radius: var(--tw-radius-md);
+    padding: 13px 16px;
+    font-size: 15px;
+    color: var(--tw-text-primary);
+    outline: none;
+    transition: var(--tw-transition);
+    font-family: var(--tw-font-body);
+}
+
+.tw-input::placeholder {
+    color: var(--tw-text-muted);
+}
+
+.tw-input:focus {
+    border-color: rgba(124, 58, 237, 0.55);
+    background: var(--tw-bg-card-hover);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+/* ── Search Pill (hero) ── */
+.tw-search-pill {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: var(--tw-blur);
+    -webkit-backdrop-filter: var(--tw-blur);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--tw-radius-pill);
+    padding: 8px 8px 8px 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.30);
+}
+
+.tw-search-pill input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: var(--tw-text-primary);
+    font-family: var(--tw-font-body);
+}
+
+.tw-search-pill input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Hero Section ── */
+.tw-hero {
+    min-height: calc(70vh - 68px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 24px 80px;
+    gap: 24px;
+}
+
+/* ── City chip (popular destinations) ── */
+.tw-city-chip {
+    padding: 8px 16px;
+    border-radius: var(--tw-radius-pill);
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.80);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--tw-transition);
+    backdrop-filter: var(--tw-blur-sm);
+}
+
+.tw-city-chip:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* ── Step Bar (wizard) ── */
+.tw-step-bar {
+    display: flex;
+    gap: 6px;
+}
+
+.tw-step-segment {
+    height: 3px;
+    flex: 1;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.12);
+    transition: background 0.35s ease;
+}
+
+.tw-step-segment.done {
+    background: linear-gradient(90deg, var(--tw-accent-purple), #a855f7);
+}
+
+/* ── Interest Grid ── */
+.tw-interest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.tw-interest-btn {
+    padding: 20px 16px;
+    border-radius: var(--tw-radius-md);
+    background: var(--tw-bg-card);
+    border: 1px solid var(--tw-border);
+    color: var(--tw-text-secondary);
+    cursor: pointer;
+    transition: var(--tw-transition);
+    text-align: left;
+    font-family: var(--tw-font-body);
+    backdrop-filter: var(--tw-blur-sm);
+}
+
+.tw-interest-btn:hover {
+    background: var(--tw-bg-card-hover);
+    border-color: var(--tw-border-strong);
+    color: var(--tw-text-primary);
+}
+
+.tw-interest-btn.active {
+    background: rgba(124, 58, 237, 0.25);
+    border-color: rgba(124, 58, 237, 0.55);
+    color: #c4b5fd;
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.20);
+}
+
+.tw-interest-icon {
+    font-size: 26px;
+    margin-bottom: 8px;
+}
+
+.tw-interest-label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* ── Day Summary Bar ── */
+.tw-day-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: var(--tw-blur-sm);
+    border: 1px solid var(--tw-border);
+    border-radius: var(--tw-radius-md);
+    padding: 10px 16px;
+}
+
+/* ── Timeline stop card ── */
+.tw-stop-card {
+    border-radius: var(--tw-radius-md);
+    overflow: hidden;
+    background: var(--tw-bg-card);
+    border: 1px solid var(--tw-border);
+    backdrop-filter: var(--tw-blur);
+    -webkit-backdrop-filter: var(--tw-blur);
+    transition: var(--tw-transition);
+}
+
+.tw-stop-card:hover {
+    background: var(--tw-bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.tw-stop-card .tw-stop-photo {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.tw-stop-card .tw-stop-body {
+    padding: 14px 16px;
+}
+
+.tw-stop-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--tw-text-primary);
+    margin-bottom: 4px;
+}
+
+.tw-stop-address {
+    font-size: 12px;
+    color: var(--tw-text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+/* ── Travel time badges ── */
+.tw-travel-walk {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    color: #4ade80;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: var(--tw-radius-pill);
+}
+
+.tw-travel-drive {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    color: #60a5fa;
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: var(--tw-radius-pill);
+}
+
+/* ── Weather widget ── */
+.tw-weather {
+    background: linear-gradient(135deg, rgba(99, 179, 237, 0.12) 0%, rgba(56, 178, 172, 0.10) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--tw-radius-lg);
+    backdrop-filter: var(--tw-blur);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.tw-weather-temp {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--tw-text-primary);
+    line-height: 1;
+}
+
+.tw-weather-stat {
+    background: rgba(255, 255, 255, 0.10);
+    border-radius: var(--tw-radius-sm);
+    padding: 8px 14px;
+    text-align: center;
+}
+
+.tw-weather-stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--tw-text-muted);
+}
+
+.tw-weather-stat-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--tw-text-primary);
+    margin-top: 2px;
+}
+
+.tw-forecast-card {
+    flex: 1;
+    min-width: 80px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--tw-radius-md);
+    padding: 10px 12px;
+    text-align: center;
+}
+
+/* ── Skeleton loader ── */
+.tw-skeleton {
+    border-radius: var(--tw-radius-md);
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.05) 25%,
+            rgba(255, 255, 255, 0.10) 50%,
+            rgba(255, 255, 255, 0.05) 75%);
+    background-size: 200% 100%;
+    animation: twShimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes twShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* ── Divider ── */
+.tw-divider {
+    height: 1px;
+    background: var(--tw-border);
+    width: 100%;
+}
+
+/* ── Page wrapper ── */
+.tw-page {
+    min-height: calc(100vh - 68px);
+    padding: 32px 16px 80px;
+}
+
+.tw-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.tw-container-sm {
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ── Map container ── */
+.tw-map-wrap {
+    border-radius: var(--tw-radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--tw-border);
+    box-shadow: var(--tw-shadow-float);
+}
+
+/* ── Grid layouts ── */
+.tw-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.tw-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 768px) {
+    .tw-grid-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .tw-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .tw-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Utility ── */
+.tw-flex {
+    display: flex;
+}
+
+.tw-flex-col {
+    flex-direction: column;
+}
+
+.tw-items-center {
+    align-items: center;
+}
+
+.tw-justify-between {
+    justify-content: space-between;
+}
+
+.tw-gap-2 {
+    gap: 8px;
+}
+
+.tw-gap-3 {
+    gap: 12px;
+}
+
+.tw-gap-4 {
+    gap: 16px;
+}
+
+.tw-gap-6 {
+    gap: 24px;
+}
+
+.tw-mt-4 {
+    margin-top: 16px;
+}
+
+.tw-mt-6 {
+    margin-top: 24px;
+}
+
+.tw-mt-8 {
+    margin-top: 32px;
+}
+
+.tw-mb-4 {
+    margin-bottom: 16px;
+}
+
+.tw-p-4 {
+    padding: 16px;
+}
+
+.tw-p-6 {
+    padding: 24px;
+}
+
+.tw-w-full {
+    width: 100%;
+}
+
+/* ── Scroll styles ── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Fade-in animation ── */
+.tw-fade-in {
+    animation: twFadeIn 0.4s ease forwards;
+}
+
+@keyframes twFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tw-fade-in-delay-1 {
+    animation-delay: 0.08s;
+    opacity: 0;
+}
+
+.tw-fade-in-delay-2 {
+    animation-delay: 0.16s;
+    opacity: 0;
+}
+
+.tw-fade-in-delay-3 {
+    animation-delay: 0.24s;
+    opacity: 0;
+}
+
+/* ── Glow accent on focus / active elements ── */
+.tw-glow-purple {
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+}
+
+.tw-glow-cyan {
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25);
+}

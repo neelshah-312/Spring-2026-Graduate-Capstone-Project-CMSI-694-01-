@@ -742,6 +742,7 @@ export default function TripResults() {
                     </button>
                 </div>
             </div>
-        </GlassPage>
+            /</div>
+        </div>
     );
 }

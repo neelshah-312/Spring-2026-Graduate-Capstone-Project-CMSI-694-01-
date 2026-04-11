@@ -742,7 +742,6 @@ export default function TripResults() {
                     </button>
                 </div>
             </div>
-            /</div>
         </div>
     );
 }

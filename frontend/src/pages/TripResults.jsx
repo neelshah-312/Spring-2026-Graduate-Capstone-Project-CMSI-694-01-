@@ -820,6 +820,7 @@ export default function TripResults() {
                     </button>
                 </div>
 
+
                 {/* ── SWAP MODAL ── */}
                 {swapTarget && (
                     <SwapModal

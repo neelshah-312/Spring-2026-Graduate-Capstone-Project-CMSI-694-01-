@@ -1,259 +1,138 @@
 const { searchPlaces } = require("./googlePlaces");
 const { getTravelTime } = require("./distance");
 
-/* ─────────────────────────────────────────
-   CATEGORY CONFIG
-   duration  = realistic visit time in hours
-   mealSlot  = which meal window this covers
-   queries   = varied search queries so Day 2
-               doesn't repeat Day 1 exactly
-───────────────────────────────────────── */
-const CATEGORY_CONFIG = {
-  food: {
-    duration: 1,
-    queries: [
-      "best restaurants",
-      "top rated cafes",
-      "popular local eateries",
-      "highly rated bistros",
-      "famous street food",
-    ],
+/* ---------- BUDGET CONFIG ---------- */
+
+// Maps budget tier → search query prefixes per category
+const BUDGET_QUERIES = {
+  budget: {
+    food: "cheap eats street food",
+    landmarks: "free landmarks",
+    museums: "free museums",
+    nature: "free parks",
+    shopping: "markets flea markets",
+    nightlife: "cheap bars pubs",
+    adventure: "free hiking trails",
   },
-  landmarks: {
-    duration: 1.5,
-    queries: [
-      "top landmarks",
-      "famous attractions",
-      "must see sights",
-      "iconic tourist spots",
-      "historic monuments",
-    ],
+  midrange: {
+    food: "best restaurants",
+    landmarks: "top landmarks",
+    museums: "best museums",
+    nature: "parks gardens",
+    shopping: "shopping areas",
+    nightlife: "bars nightlife",
+    adventure: "adventure activities",
   },
-  museums: {
-    duration: 2,
-    queries: [
-      "best museums",
-      "top art galleries",
-      "history museums",
-      "science museums",
-      "cultural centers",
-    ],
-  },
-  nature: {
-    duration: 1.5,
-    queries: [
-      "scenic parks",
-      "nature reserves",
-      "botanical gardens",
-      "waterfront parks",
-      "hiking trails",
-    ],
-  },
-  shopping: {
-    duration: 1.5,
-    queries: [
-      "popular shopping areas",
-      "best markets",
-      "local bazaars",
-      "shopping districts",
-      "artisan shops",
-    ],
-  },
-  nightlife: {
-    duration: 2,
-    queries: [
-      "best bars",
-      "popular nightlife",
-      "rooftop bars",
-      "live music venues",
-      "cocktail lounges",
-    ],
-  },
-  adventure: {
-    duration: 2,
-    queries: [
-      "adventure activities",
-      "outdoor experiences",
-      "water sports",
-      "zip line tours",
-      "extreme sports",
-    ],
+  luxury: {
+    food: "fine dining michelin restaurants",
+    landmarks: "exclusive landmarks tours",
+    museums: "top museums",
+    nature: "luxury resorts nature",
+    shopping: "luxury shopping boutiques",
+    nightlife: "rooftop bars luxury clubs",
+    adventure: "premium adventure experiences",
   },
 };
 
-/* ─────────────────────────────────────────
-   MEAL SLOTS — structured breakfast / lunch
-   / dinner windows mapped to food category
-───────────────────────────────────────── */
-const MEAL_SLOTS = [
-  { start: 7, end: 9, label: "breakfast", query: "best breakfast cafes" },
-  { start: 12, end: 14, label: "lunch", query: "best lunch restaurants" },
-  { start: 19, end: 21, label: "dinner", query: "best dinner restaurants" },
-];
+// Maps budget tier → acceptable Google price_level values
+// price_level: 0=free, 1=$, 2=$$, 3=$$$, 4=$$$$
+// null means no price data — always allow
+const BUDGET_PRICE_LEVELS = {
+  budget: new Set([0, 1, null]),
+  midrange: new Set([1, 2, 3, null]),
+  luxury: new Set([3, 4, null]),
+};
 
-/* ─────────────────────────────────────────
-   TIME-OF-DAY → CATEGORY RULES
-   Returns best category for a given hour,
-   respecting user's selected interests only
-───────────────────────────────────────── */
-const TIME_RULES = [
-  { start: 9, end: 12, preferred: ["landmarks", "nature", "adventure"] },
-  { start: 12, end: 14, preferred: ["food"] },
-  { start: 14, end: 17, preferred: ["museums", "shopping", "landmarks"] },
-  { start: 17, end: 19, preferred: ["nature", "shopping", "landmarks"] },
-  { start: 19, end: 23, preferred: ["food", "nightlife"] },
-];
+// Budget tier → label shown on itinerary cards
+const BUDGET_LABELS = {
+  budget: { label: "Budget Friendly", icon: "💰", color: "#22c55e" },
+  midrange: { label: "Mid-Range", icon: "💰💰", color: "#f59e0b" },
+  luxury: { label: "Luxury", icon: "💰💰💰", color: "#a855f7" },
+};
 
-function getCategoryForHour(hour, interests) {
-  const rule = TIME_RULES.find(r => hour >= r.start && hour < r.end);
-  if (!rule) return interests[0];
+/* ---------- TIME LOGIC ---------- */
 
-  // pick first preferred category that the user actually selected
-  const match = rule.preferred.find(cat => interests.includes(cat));
-  return match || interests[0];
-}
-
-/* ─────────────────────────────────────────
-   HAVERSINE DISTANCE  (accurate km)
-───────────────────────────────────────── */
-function haversineKm(a, b) {
-  if (!a?.lat || !b?.lat) return Infinity;
-  const R = 6371;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
-  const sin2 = (x) => Math.sin(x / 2) ** 2;
-  const h =
-    sin2(dLat) +
-    Math.cos((a.lat * Math.PI) / 180) *
-    Math.cos((b.lat * Math.PI) / 180) *
-    sin2(dLng);
-  return R * 2 * Math.asin(Math.sqrt(h));
-}
-
-/* ─────────────────────────────────────────
-   SCORE PLACES
-   Blends rating quality with proximity.
-   Formula: ratingScore - proximityPenalty
-   Higher = better.
-───────────────────────────────────────── */
-function scorePlaces(places, currentLocation) {
-  return places.map((p) => {
-    // rating score: bayesian-style (rating × log(reviews+1))
-    const ratingScore =
-      p.rating && p.userRatingsTotal
-        ? p.rating * Math.log10(p.userRatingsTotal + 1)
-        : p.rating
-          ? p.rating * 0.5
-          : 0;
-
-    // proximity penalty: 0 if no prior location, else km / 2
-    const distKm = currentLocation
-      ? haversineKm(currentLocation, p)
-      : 0;
-    const proximityPenalty = distKm / 2;
-
-    return { ...p, _score: ratingScore - proximityPenalty };
-  });
-}
-
-/* ─────────────────────────────────────────
-   PARSE START HOUR
-───────────────────────────────────────── */
 function parseStartHour(startTime) {
   if (!startTime) return 9;
   const [h, m] = startTime.split(":").map(Number);
-  if (isNaN(h)) return 9;
-  return m > 0 ? Math.min(h + 1, 23) : h;
+  if (!h && h !== 0) return 9;
+  return m === 0 ? h : Math.min(h + 1, 23);
 }
 
-/* ─────────────────────────────────────────
-   BUILD DAILY SCHEDULE
-   Figures out how many stops fit in a day
-   given realistic durations + start hour.
-   Returns array of { hour, category, isMeal }
-───────────────────────────────────────── */
-function buildDaySchedule(startHour, interests, dayIndex) {
-  const END_HOUR = 22;
-  const slots = [];
-  let hour = startHour;
+function getCategoryByTime(hour, interests) {
+  const rules = [
+    { start: 6, end: 10, type: "food" },
+    { start: 10, end: 14, type: "landmarks" },
+    { start: 14, end: 17, type: "museums" },
+    { start: 17, end: 20, type: "shopping" },
+    { start: 20, end: 23, type: "nightlife" },
+  ];
 
-  while (hour < END_HOUR) {
-    // check if this hour falls in a meal window
-    const mealSlot = MEAL_SLOTS.find(
-      m => hour >= m.start && hour < m.end && interests.includes("food")
-    );
-
-    if (mealSlot) {
-      slots.push({ hour, category: "food", isMeal: true, mealLabel: mealSlot.label, mealQuery: mealSlot.query });
-      hour += CATEGORY_CONFIG.food.duration;
-      continue;
-    }
-
-    // skip meal windows even if user didn't pick food
-    const inMealWindow = MEAL_SLOTS.some(m => hour >= m.start && hour < m.end);
-    if (inMealWindow) {
-      hour += 1;
-      continue;
-    }
-
-    const category = getCategoryForHour(hour, interests);
-    const duration = CATEGORY_CONFIG[category]?.duration || 2;
-
-    slots.push({ hour, category, isMeal: false });
-    hour += duration;
-  }
-
-  return slots;
+  const rule = rules.find(r => hour >= r.start && hour < r.end);
+  if (!rule) return interests[0];
+  return interests.includes(rule.type) ? rule.type : interests[0];
 }
 
-/* ─────────────────────────────────────────
-   MAIN GENERATOR
-───────────────────────────────────────── */
-async function generateItinerary({ city, interests, days, startTime }) {
+/* ---------- DISTANCE LOGIC ---------- */
+
+function getDistance(a, b) {
+  if (!a || !b || !a.lat || !b.lat) return Infinity;
+  const dx = a.lat - b.lat;
+  const dy = a.lng - b.lng;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/* ---------- BUDGET FILTERING ---------- */
+
+function filterByBudget(places, budget) {
+  const allowed = BUDGET_PRICE_LEVELS[budget] || BUDGET_PRICE_LEVELS.midrange;
+  return places.filter(p => allowed.has(p.priceLevel ?? null));
+}
+
+/* ---------- MAIN GENERATOR ---------- */
+
+async function generateItinerary({ city, interests, days, startTime, budget = "midrange" }) {
   const itinerary = [];
   const used = new Set();
   const startHour = parseStartHour(startTime);
-
-  // Validate interests — default if empty
-  const safeInterests =
-    Array.isArray(interests) && interests.length
-      ? interests
-      : ["landmarks", "food", "museums"];
+  const queries = BUDGET_QUERIES[budget] || BUDGET_QUERIES.midrange;
+  const budgetMeta = BUDGET_LABELS[budget] || BUDGET_LABELS.midrange;
 
   for (let d = 1; d <= days; d++) {
-    const daySchedule = buildDaySchedule(startHour, safeInterests, d - 1);
+    let currentHour = startHour;
     let currentLocation = null;
 
-    // track per-category query rotation per day
-    // e.g. Day 1 uses query index 0, Day 2 uses index 1, etc.
-    const queryIndexForDay = (d - 1) % 5;
-
-    for (const slot of daySchedule) {
-      const { hour, category, isMeal, mealQuery } = slot;
-
-      // pick query — meal slots use specific meal queries,
-      // others rotate across days for variety
-      const config = CATEGORY_CONFIG[category];
-      const queryList = config?.queries || ["top places"];
-      const query = isMeal
-        ? mealQuery
-        : queryList[queryIndexForDay % queryList.length];
+    for (let slot = 0; slot < interests.length; slot++) {
+      const category = getCategoryByTime(currentHour, interests);
+      const query = queries[category] || category;
 
       let places = await searchPlaces({ city, query });
 
-      // remove already-used places
+      // Remove already used places
       places = places.filter(p => p?.name && !used.has(p.name));
 
-      if (!places.length) continue;
+      // Filter by budget price level
+      let budgetFiltered = filterByBudget(places, budget);
 
-      // score by rating + proximity (fixes raw lat/lng sort)
-      const scored = scorePlaces(places, currentLocation);
-      scored.sort((a, b) => b._score - a._score);
+      // If budget filtering leaves nothing, fall back to all places
+      // (better to show something than nothing)
+      if (budgetFiltered.length === 0) budgetFiltered = places;
 
-      const selected = scored[0];
+      if (!budgetFiltered.length) {
+        currentHour += 2;
+        continue;
+      }
+
+      // Sort by proximity to current location
+      if (currentLocation) {
+        budgetFiltered.sort(
+          (a, b) => getDistance(currentLocation, a) - getDistance(currentLocation, b)
+        );
+      }
+
+      const selected = budgetFiltered[0];
       used.add(selected.name);
 
-      // get travel times from previous stop
       let travel = null;
       if (currentLocation && selected.lat) {
         travel = await getTravelTime(
@@ -262,23 +141,25 @@ async function generateItinerary({ city, interests, days, startTime }) {
         );
       }
 
-      const hourStr = String(Math.floor(hour)).padStart(2, "0");
-      const minStr = hour % 1 === 0.5 ? "30" : "00";
-
       itinerary.push({
         ...selected,
         day: d,
         category,
         photoUrl: selected.photoUrl || null,
-        time: `${hourStr}:${minStr}`,
+        time: `${String(currentHour).padStart(2, "0")}:00`,
         walkTime: travel?.walking || null,
         driveTime: travel?.driving || null,
         travelDistance: travel?.distance || null,
-        rating: selected.rating || null,
-        userRatingsTotal: selected.userRatingsTotal || null,
+        // Budget metadata shown on the card
+        budgetTier: budget,
+        budgetLabel: budgetMeta.label,
+        budgetIcon: budgetMeta.icon,
+        budgetColor: budgetMeta.color,
+        priceLevel: selected.priceLevel ?? null,
       });
 
       currentLocation = selected;
+      currentHour += 2;
     }
   }
 

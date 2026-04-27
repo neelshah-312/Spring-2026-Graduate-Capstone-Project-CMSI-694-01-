@@ -2,6 +2,9 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState, useRef } from "react";
 import GlassPage from "../components/GlassPage";
 import { GoogleMap, Marker, Polyline, InfoWindow, useJsApiLoader } from "@react-google-maps/api";
+import ExportPDFButton from "../components/ExportPDFButton";
+import SwapModal from "../components/SwapModal";
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
 const GMAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
@@ -52,6 +55,7 @@ function WeatherWidget({ city }) {
     const [weather, setWeather] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
 
     useEffect(() => {
         if (!city) return;
@@ -387,7 +391,7 @@ const CAT_COLORS = {
     shopping: "#ec4899", nightlife: "#06b6d4", landmarks: "#f59e0b", adventure: "#ef4444",
 };
 
-function TimelineItem({ place, index, totalInDay }) {
+function TimelineItem({ place, index, totalInDay, onOpenSwap }) {
     const [hovered, setHovered] = useState(false);
     const cat = place.category || "landmarks";
     const accent = CAT_COLORS[cat] || "#6366f1";
@@ -464,10 +468,40 @@ function TimelineItem({ place, index, totalInDay }) {
                         }}>
                             <span>{icon}</span> {cat}
                         </div>
+
+                        {/* Budget badge — ADD THIS right after the category pill */}
+                        {place.budgetIcon && (
+                            <div style={{
+                                position: "absolute", bottom: 10, right: 12,
+                                background: `${place.budgetColor}cc`,
+                                backdropFilter: "blur(6px)",
+                                borderRadius: 99, padding: "3px 10px",
+                                color: "white", fontSize: 11, fontWeight: 700,
+                                display: "flex", alignItems: "center", gap: 4,
+                                border: `1px solid ${place.budgetColor}`,
+                            }}>
+                                {place.budgetIcon}
+                            </div>
+                        )}
                     </div>
 
                     {/* Content */}
-                    <div style={{ padding: "14px 16px" }}>
+                    <div style={{ padding: "14px 16px" }}>{place.budgetLabel && (
+                        <div style={{
+                            display: "inline-flex", alignItems: "center", gap: 5,
+                            fontSize: 11, fontWeight: 700,
+                            color: place.budgetColor || "rgba(255,255,255,0.6)",
+                            background: `${place.budgetColor || "#6366f1"}22`,
+                            border: `1px solid ${place.budgetColor || "#6366f1"}55`,
+                            borderRadius: 99, padding: "3px 10px",
+                            marginBottom: 8,
+                        }}>
+                            {place.budgetIcon} {place.budgetLabel}
+                            {place.priceLevel != null && (
+                                <span style={{ opacity: 0.6 }}>· {"$".repeat(place.priceLevel || 1)}</span>
+                            )}
+                        </div>
+                    )}
                         <div style={{ color: "white", fontWeight: 700, fontSize: 16, marginBottom: 4, lineHeight: 1.3 }}>{place.name}</div>
                         {place.address && (
                             <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, marginBottom: 10, display: "flex", alignItems: "flex-start", gap: 4 }}>
@@ -519,6 +553,16 @@ function TimelineItem({ place, index, totalInDay }) {
                             >
                                 🏨 Hotels
                             </button>
+                            <button
+                                onClick={(e) => { e.preventDefault(); onOpenSwap(); }}
+                                style={{
+                                    background: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.8)",
+                                    border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12,
+                                    padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                                }}
+                            >
+                                🔄 Swap
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -538,6 +582,7 @@ export default function TripResults() {
     const [itinerary, setItinerary] = useState([]);
     const [error, setError] = useState("");
     const [showMap, setShowMap] = useState(false);
+    const [swapTarget, setSwapTarget] = useState(null);
 
     const city = state?.destination || state?.city || null;
     const startDate = state?.startDate || null;
@@ -594,6 +639,31 @@ export default function TripResults() {
             <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 16px 60px" }}>
 
                 {/* Header */}
+                {/* <div style={{ marginBottom: 24 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                        <div>
+                            <h1 style={{ fontSize: 32, fontWeight: 800, color: "white", margin: 0, letterSpacing: "-0.02em" }}>
+                                {city || "Your Trip"} ✈️
+                            </h1>
+                            {(startDate || endDate) && (
+                                <div style={{ color: "rgba(255,255,255,0.6)", marginTop: 4, fontSize: 14 }}>
+                                    📅 {startDate} → {endDate}
+                                    {itinerary.length > 0 && <span style={{ marginLeft: 12 }}>· {itinerary.length} stops total</span>}
+                                </div>
+                            )}
+                        </div>
+
+                        <a href="/plan" style={{
+                            background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.25)", borderRadius: 14,
+                            padding: "10px 20px", color: "white", fontWeight: 600, fontSize: 14,
+                            textDecoration: "none", transition: "background 0.2s",
+                        }}>
+                            + New Trip
+                        </a>
+                    </div>
+                </div> */}
+                {/* Header */}
                 <div style={{ marginBottom: 24 }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                         <div>
@@ -607,17 +677,25 @@ export default function TripResults() {
                                 </div>
                             )}
                         </div>
-                        <a href="/plan" style={{
-                            background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
-                            border: "1px solid rgba(255,255,255,0.25)", borderRadius: 14,
-                            padding: "10px 20px", color: "white", fontWeight: 600, fontSize: 14,
-                            textDecoration: "none", transition: "background 0.2s",
-                        }}>
-                            + New Trip
-                        </a>
+
+                        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                            <ExportPDFButton
+                                city={city}
+                                startDate={startDate}
+                                endDate={endDate}
+                                itinerary={itinerary}
+                            />
+                            <a href="/plan" style={{
+                                background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
+                                border: "1px solid rgba(255,255,255,0.25)", borderRadius: 14,
+                                padding: "10px 20px", color: "white", fontWeight: 600, fontSize: 14,
+                                textDecoration: "none",
+                            }}>
+                                + New Trip
+                            </a>
+                        </div>
                     </div>
                 </div>
-
                 {/* ── WEATHER WIDGET ── */}
                 <WeatherWidget city={city} />
 
@@ -685,7 +763,7 @@ export default function TripResults() {
                             <div style={{ color: "rgba(255,255,255,0.5)", textAlign: "center", padding: 40 }}>No stops for this day.</div>
                         )}
                         {!loading && activePlaces.map((place, i) => (
-                            <TimelineItem key={place.id || i} place={place} index={i} totalInDay={activePlaces.length} />
+                            <TimelineItem key={place.id || i} place={place} index={i} totalInDay={activePlaces.length} onOpenSwap={() => setSwapTarget(place)} />
                         ))}
                     </div>
 
@@ -741,6 +819,24 @@ export default function TripResults() {
                         {showMap ? "🗺️ Hide Map" : "🗺️ Show Trip Map"}
                     </button>
                 </div>
+
+                {/* ── SWAP MODAL ── */}
+                {swapTarget && (
+                    <SwapModal
+                        place={swapTarget}
+                        city={city}
+                        allPlaces={itinerary}
+                        onSwap={(newPlace) => {
+                            setItinerary(prev => prev.map(p =>
+                                p.name === swapTarget.name && p.day === swapTarget.day
+                                    ? { ...newPlace, day: p.day, time: p.time, category: p.category }
+                                    : p
+                            ));
+                            setSwapTarget(null);
+                        }}
+                        onClose={() => setSwapTarget(null)}
+                    />
+                )}
             </div>
         </div>
     );

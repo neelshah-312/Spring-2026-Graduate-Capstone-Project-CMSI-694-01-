@@ -23,7 +23,7 @@ export default function Trip() {
   const [err, setErr] = useState("");
 
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_KEY,
   });
 
   useEffect(() => {
@@ -84,11 +84,10 @@ export default function Trip() {
             <button
               key={d}
               onClick={() => setDay(d)}
-              className={`px-4 py-2 rounded-full border transition text-sm font-medium ${
-                d === day
-                  ? "bg-black text-white border-black"
-                  : "bg-white border-black/10 hover:bg-black/5"
-              }`}
+              className={`px-4 py-2 rounded-full border transition text-sm font-medium ${d === day
+                ? "bg-black text-white border-black"
+                : "bg-white border-black/10 hover:bg-black/5"
+                }`}
             >
               Day {d}
             </button>

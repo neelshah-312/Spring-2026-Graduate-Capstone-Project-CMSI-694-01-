@@ -11,6 +11,12 @@ const INTEREST_OPTIONS = [
     { key: "landmarks", label: "Landmarks", icon: "🏙️", desc: "Icons & historic sites" },
 ];
 
+const BUDGET_OPTIONS = [
+    { key: "budget", label: "Budget", icon: "💰", desc: "Street food, free sights & hostels", color: "#22c55e", shadow: "rgba(34,197,94,0.35)", border: "rgba(74,222,128,0.8)" },
+    { key: "midrange", label: "Mid-Range", icon: "💰💰", desc: "Casual dining, paid museums & hotels", color: "#f59e0b", shadow: "rgba(245,158,11,0.35)", border: "rgba(251,191,36,0.8)" },
+    { key: "luxury", label: "Luxury", icon: "💰💰💰", desc: "Fine dining, exclusive spots & resorts", color: "#a855f7", shadow: "rgba(168,85,247,0.35)", border: "rgba(192,132,252,0.8)" },
+];
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5050";
 
 export default function SelectInterests() {
@@ -19,6 +25,7 @@ export default function SelectInterests() {
     const { destination, startDate, endDate, days } = location.state || {};
 
     const [selected, setSelected] = useState([]);
+    const [budget, setBudget] = useState("midrange");
     const [loading, setLoading] = useState(false);
     const [err, setErr] = useState("");
 
@@ -38,7 +45,7 @@ export default function SelectInterests() {
             const res = await fetch(`${BACKEND_URL}/api/trips/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ city: destination, days, startDate, endDate, interests: selected }),
+                body: JSON.stringify({ city: destination, days, startDate, endDate, interests: selected, budget }),
             });
 
             const data = await res.json();
@@ -47,7 +54,7 @@ export default function SelectInterests() {
             const tripId = data.tripId || data.id;
 
             navigate(`/trip/${tripId}`, {
-                state: { itinerary: data.itinerary, city: destination, startDate, endDate, days, interests: selected },
+                state: { itinerary: data.itinerary, city: destination, startDate, endDate, days, interests: selected, budget },
             });
         } catch (e) {
             setErr(e.message || "Something went wrong.");
@@ -72,7 +79,11 @@ export default function SelectInterests() {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .interest-card { position: relative; }
         .interest-card:hover { transform: translateY(-3px) !important; }
+        .budget-card { position: relative; }
+        .budget-card:hover { transform: translateY(-3px) !important; }
         .generate-btn:hover:not(:disabled) { transform: scale(1.03); }
         .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
       `}</style>
@@ -86,10 +97,8 @@ export default function SelectInterests() {
             {/* Content */}
             <div style={{
                 position: "relative", zIndex: 10,
-                display: "flex", flexDirection: "column",
-                alignItems: "center",
-                padding: "32px 24px 60px",
-                minHeight: "100vh",
+                display: "flex", flexDirection: "column", alignItems: "center",
+                padding: "32px 24px 60px", minHeight: "100vh",
             }}>
 
                 {/* Top nav row */}
@@ -101,44 +110,28 @@ export default function SelectInterests() {
                     <button
                         onClick={() => navigate("/dates", { state: { destination } })}
                         style={{
-                            background: "rgba(255,255,255,0.15)",
-                            backdropFilter: "blur(10px)",
-                            border: "1px solid rgba(255,255,255,0.25)",
-                            borderRadius: 999,
-                            padding: "7px 16px",
-                            color: "rgba(255,255,255,0.85)",
-                            fontSize: 13, fontWeight: 600,
-                            cursor: "pointer", fontFamily: "inherit",
+                            background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.25)", borderRadius: 999,
+                            padding: "7px 16px", color: "rgba(255,255,255,0.85)",
+                            fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                             transition: "all 0.15s ease",
                         }}
                         onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.25)"}
                         onMouseOut={e => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
-                    >
-                        ← Back
-                    </button>
+                    >← Back</button>
                     <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Step 3 of 3</span>
-
-                    {/* trip summary pill */}
                     <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
                         <span style={{
-                            background: "rgba(255,255,255,0.15)",
-                            backdropFilter: "blur(10px)",
-                            border: "1px solid rgba(255,255,255,0.2)",
-                            borderRadius: 999, padding: "5px 14px",
-                            color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600,
-                        }}>
-                            📍 {destination}
-                        </span>
+                            background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.2)", borderRadius: 999,
+                            padding: "5px 14px", color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600,
+                        }}>📍 {destination}</span>
                         {days && (
                             <span style={{
-                                background: "rgba(255,255,255,0.15)",
-                                backdropFilter: "blur(10px)",
-                                border: "1px solid rgba(255,255,255,0.2)",
-                                borderRadius: 999, padding: "5px 14px",
-                                color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600,
-                            }}>
-                                🗓 {days} days
-                            </span>
+                                background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
+                                border: "1px solid rgba(255,255,255,0.2)", borderRadius: 999,
+                                padding: "5px 14px", color: "rgba(255,255,255,0.85)", fontSize: 13, fontWeight: 600,
+                            }}>🗓 {days} days</span>
                         )}
                     </div>
                 </div>
@@ -147,20 +140,10 @@ export default function SelectInterests() {
                 <div style={{ textAlign: "center", marginBottom: 32 }}>
                     <h1 style={{
                         animation: "fadeUp 0.4s 0.08s ease both",
-                        fontSize: "clamp(32px, 4.5vw, 56px)",
-                        fontWeight: 900,
-                        color: "white",
-                        margin: "0 0 10px",
-                        letterSpacing: "-0.03em",
-                        textShadow: "0 2px 30px rgba(0,0,0,0.3)",
-                    }}>
-                        What excites you?
-                    </h1>
-                    <p style={{
-                        animation: "fadeUp 0.4s 0.14s ease both",
-                        color: "rgba(255,255,255,0.65)",
-                        fontSize: 16, margin: 0,
-                    }}>
+                        fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 900, color: "white",
+                        margin: "0 0 10px", letterSpacing: "-0.03em", textShadow: "0 2px 30px rgba(0,0,0,0.3)",
+                    }}>What excites you?</h1>
+                    <p style={{ animation: "fadeUp 0.4s 0.14s ease both", color: "rgba(255,255,255,0.65)", fontSize: 16, margin: 0 }}>
                         Pick your interests — select as many as you like
                     </p>
                 </div>
@@ -168,68 +151,33 @@ export default function SelectInterests() {
                 {/* Interest grid */}
                 <div style={{
                     animation: "fadeUp 0.4s 0.2s ease both",
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                    gap: 14,
-                    width: "100%",
-                    maxWidth: 860,
+                    display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                    gap: 14, width: "100%", maxWidth: 860,
                 }}>
                     {INTEREST_OPTIONS.map((item, i) => {
                         const isActive = selected.includes(item.key);
                         return (
-                            <button
-                                key={item.key}
-                                className="interest-card"
-                                onClick={() => toggle(item.key)}
+                            <button key={item.key} className="interest-card" onClick={() => toggle(item.key)}
                                 style={{
-                                    background: isActive
-                                        ? "rgba(109,40,217,0.85)"
-                                        : "rgba(255,255,255,0.14)",
-                                    backdropFilter: "blur(16px)",
-                                    WebkitBackdropFilter: "blur(16px)",
-                                    border: isActive
-                                        ? "2px solid rgba(167,139,250,0.8)"
-                                        : "2px solid rgba(255,255,255,0.2)",
-                                    borderRadius: 20,
-                                    padding: "22px 20px",
-                                    textAlign: "left",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s ease",
-                                    fontFamily: "inherit",
+                                    background: isActive ? "rgba(109,40,217,0.85)" : "rgba(255,255,255,0.14)",
+                                    backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+                                    border: isActive ? "2px solid rgba(167,139,250,0.8)" : "2px solid rgba(255,255,255,0.2)",
+                                    borderRadius: 20, padding: "22px 20px", textAlign: "left",
+                                    cursor: "pointer", transition: "all 0.2s ease", fontFamily: "inherit",
                                     animationDelay: `${i * 40}ms`,
-                                    boxShadow: isActive
-                                        ? "0 8px 32px rgba(109,40,217,0.35)"
-                                        : "0 4px 16px rgba(0,0,0,0.12)",
+                                    boxShadow: isActive ? "0 8px 32px rgba(109,40,217,0.35)" : "0 4px 16px rgba(0,0,0,0.12)",
                                 }}
                             >
                                 <div style={{ fontSize: 32, marginBottom: 10, lineHeight: 1 }}>{item.icon}</div>
-                                <div style={{
-                                    fontWeight: 700, fontSize: 16,
-                                    color: isActive ? "white" : "rgba(255,255,255,0.92)",
-                                    marginBottom: 4,
-                                }}>
-                                    {item.label}
-                                </div>
-                                <div style={{
-                                    fontSize: 12,
-                                    color: isActive ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.5)",
-                                    fontWeight: 400,
-                                    lineHeight: 1.4,
-                                }}>
-                                    {item.desc}
-                                </div>
-
+                                <div style={{ fontWeight: 700, fontSize: 16, color: isActive ? "white" : "rgba(255,255,255,0.92)", marginBottom: 4 }}>{item.label}</div>
+                                <div style={{ fontSize: 12, color: isActive ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.5)", fontWeight: 400, lineHeight: 1.4 }}>{item.desc}</div>
                                 {isActive && (
                                     <div style={{
-                                        position: "absolute",
-                                        top: 14, right: 14,
-                                        width: 20, height: 20,
-                                        borderRadius: "50%",
+                                        position: "absolute", top: 14, right: 14,
+                                        width: 20, height: 20, borderRadius: "50%",
                                         background: "rgba(255,255,255,0.25)",
                                         display: "flex", alignItems: "center", justifyContent: "center",
-                                        fontSize: 11,
-                                        color: "white",
-                                        fontWeight: 800,
+                                        fontSize: 11, color: "white", fontWeight: 800,
                                     }}>✓</div>
                                 )}
                             </button>
@@ -237,92 +185,101 @@ export default function SelectInterests() {
                     })}
                 </div>
 
+                {/* ── Budget section ── */}
+                <div style={{
+                    animation: "fadeUp 0.4s 0.28s ease both",
+                    width: "100%", maxWidth: 860, marginTop: 44,
+                }}>
+                    <div style={{ textAlign: "center", marginBottom: 20 }}>
+                        <h2 style={{
+                            fontSize: "clamp(24px, 3.5vw, 40px)", fontWeight: 900, color: "white",
+                            margin: "0 0 8px", letterSpacing: "-0.03em", textShadow: "0 2px 30px rgba(0,0,0,0.3)",
+                        }}>What's your budget?</h2>
+                        <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 16, margin: 0 }}>
+                            We'll tailor every stop to match your spending style
+                        </p>
+                    </div>
+
+                    <div style={{
+                        display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14,
+                    }}>
+                        {BUDGET_OPTIONS.map((opt) => {
+                            const isActive = budget === opt.key;
+                            return (
+                                <button key={opt.key} className="budget-card" onClick={() => setBudget(opt.key)}
+                                    style={{
+                                        background: isActive ? `${opt.color}28` : "rgba(255,255,255,0.14)",
+                                        backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+                                        border: isActive ? `2px solid ${opt.border}` : "2px solid rgba(255,255,255,0.2)",
+                                        borderRadius: 20, padding: "22px 20px", textAlign: "left",
+                                        cursor: "pointer", transition: "all 0.2s ease", fontFamily: "inherit",
+                                        boxShadow: isActive ? `0 8px 32px ${opt.shadow}` : "0 4px 16px rgba(0,0,0,0.12)",
+                                    }}
+                                >
+                                    <div style={{ fontSize: 32, marginBottom: 10, lineHeight: 1 }}>{opt.icon}</div>
+                                    <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4, color: isActive ? opt.color : "rgba(255,255,255,0.92)" }}>{opt.label}</div>
+                                    <div style={{ fontSize: 12, color: isActive ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.5)", fontWeight: 400, lineHeight: 1.4 }}>{opt.desc}</div>
+                                    {isActive && (
+                                        <div style={{
+                                            position: "absolute", top: 14, right: 14,
+                                            width: 20, height: 20, borderRadius: "50%",
+                                            background: `${opt.color}33`, border: `1px solid ${opt.color}`,
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            fontSize: 11, color: opt.color, fontWeight: 800,
+                                        }}>✓</div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 {/* Error */}
                 {err && (
                     <div style={{
-                        marginTop: 16,
-                        background: "rgba(239,68,68,0.15)",
-                        backdropFilter: "blur(10px)",
-                        border: "1px solid rgba(239,68,68,0.35)",
-                        borderRadius: 12,
-                        padding: "10px 18px",
-                        color: "#FCA5A5",
-                        fontSize: 14, fontWeight: 500,
-                    }}>
-                        ⚠️ {err}
-                    </div>
+                        marginTop: 16, background: "rgba(239,68,68,0.15)", backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(239,68,68,0.35)", borderRadius: 12,
+                        padding: "10px 18px", color: "#FCA5A5", fontSize: 14, fontWeight: 500,
+                    }}>⚠️ {err}</div>
                 )}
 
                 {/* Bottom bar */}
                 <div style={{
-                    marginTop: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 16,
+                    marginTop: 32, display: "flex", alignItems: "center", justifyContent: "center", gap: 16,
                     animation: "fadeUp 0.4s 0.3s ease both",
                 }}>
                     {selected.length > 0 && (
                         <div style={{
-                            background: "rgba(255,255,255,0.15)",
-                            backdropFilter: "blur(10px)",
-                            border: "1px solid rgba(255,255,255,0.2)",
-                            borderRadius: 999,
-                            padding: "10px 18px",
-                            color: "rgba(255,255,255,0.85)",
-                            fontSize: 14, fontWeight: 600,
-                        }}>
-                            {selected.length} selected
-                        </div>
+                            background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)",
+                            border: "1px solid rgba(255,255,255,0.2)", borderRadius: 999,
+                            padding: "10px 18px", color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: 600,
+                        }}>{selected.length} selected</div>
                     )}
 
-                    <button
-                        className="generate-btn"
-                        onClick={handleGenerate}
-                        disabled={!canContinue || loading}
+                    <button className="generate-btn" onClick={handleGenerate} disabled={!canContinue || loading}
                         style={{
-                            background: canContinue && !loading
-                                ? "linear-gradient(135deg, #EC4899, #DB2777)"
-                                : "rgba(255,255,255,0.2)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: 16,
-                            padding: "15px 36px",
-                            fontSize: 16,
-                            fontWeight: 700,
+                            background: canContinue && !loading ? "linear-gradient(135deg, #EC4899, #DB2777)" : "rgba(255,255,255,0.2)",
+                            color: "white", border: "none", borderRadius: 16, padding: "15px 36px",
+                            fontSize: 16, fontWeight: 700,
                             cursor: canContinue && !loading ? "pointer" : "not-allowed",
-                            transition: "all 0.2s ease",
-                            fontFamily: "inherit",
+                            transition: "all 0.2s ease", fontFamily: "inherit",
                             boxShadow: canContinue && !loading ? "0 6px 24px rgba(236,72,153,0.4)" : "none",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
+                            display: "flex", alignItems: "center", gap: 8,
                         }}
                     >
                         {loading ? (
                             <>
                                 <span style={{
-                                    display: "inline-block",
-                                    width: 16, height: 16,
-                                    border: "2.5px solid rgba(255,255,255,0.3)",
-                                    borderTopColor: "white",
-                                    borderRadius: "50%",
-                                    animation: "spin 0.7s linear infinite",
+                                    display: "inline-block", width: 16, height: 16,
+                                    border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white",
+                                    borderRadius: "50%", animation: "spin 0.7s linear infinite",
                                 }} />
                                 Generating your trip...
                             </>
-                        ) : (
-                            <>Generate Itinerary ✨</>
-                        )}
+                        ) : <>Generate Itinerary ✨</>}
                     </button>
                 </div>
 
-                <style>{`
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-          .interest-card { position: relative; }
-        `}</style>
             </div>
         </div>
     );

@@ -14,10 +14,6 @@ TripWise is a web application that helps users plan trips by generating personal
 - Database: SQLite
 - APIs: Google Places API, Weather API
 
-## Implemented Features (Sprint 4)
-- SCRUM-14: Rule-based itinerary generator
-- SCRUM-19: Weather integration
-
 ## How to Run
 ### Backend
 cd backend  
